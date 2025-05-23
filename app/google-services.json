@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "46336032851",
+    "project_id": "brewspot-5eb61",
+    "storage_bucket": "brewspot-5eb61.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:46336032851:android:0e71e06f1300cdf42ec6a6",
+        "android_client_info": {
+          "package_name": "com.example.brewspot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "46336032851-dc5r7qoph0ed264v7n4q29ndln66g572.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.brewspot",
+            "certificate_hash": "f3b8140dcd5f4d8790e809678d9b469ddbe04932"
+          }
+        },
+        {
+          "client_id": "46336032851-psnppj5vbnt7oq5ri5c7qn0u7q4knoj9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdTNAghj9a39leQd-krKGoie2p5pX-vNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "46336032851-psnppj5vbnt7oq5ri5c7qn0u7q4knoj9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
