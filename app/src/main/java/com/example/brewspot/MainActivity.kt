@@ -1,47 +1,26 @@
 package com.example.brewspot
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.brewspot.ui.theme.BrewSpotTheme
-
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import com.example.brewspot.navigation.AppNavigation
+import com.example.brewspot.ui.theme.MyAppTheme
+import com.example.brewspot.view.login.LoginViewModel
+import com.example.brewspot.ui.theme.Purple40
+import com.google.android.gms.auth.api.signin.*
+import com.google.android.gms.common.api.ApiException
+import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            BrewSpotTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            MyAppTheme {
+                AppNavigation()
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    BrewSpotTheme {
-        Greeting("Android")
     }
 }
