@@ -15,9 +15,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.brewspot.repository.AuthRepository
 import com.example.brewspot.view.home.HomeScreen
+import com.example.brewspot.view.home.HomeViewModel
 import com.example.brewspot.view.login.LoginScreen
 import com.example.brewspot.view.login.LoginViewModel
 import com.example.brewspot.view.login.LoginViewModelFactory
+import com.example.brewspot.view.profile.EditProfileScreen
+import com.example.brewspot.view.profile.ProfileScreen
+import com.example.brewspot.view.profile.ProfileViewModel
 import com.example.brewspot.view.register.RegisterScreen
 import com.example.brewspot.view.reservatio.TableLayoutScreen
 import com.example.brewspot.view.reservation.TableViewModel
@@ -36,8 +40,11 @@ fun AppNavigation() {
 
     // Tambahkan ViewModel untuk Table
     val tableViewModel: TableViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel() // <-- Correctly initialize HomeViewModel here
 
-    NavHost(navController = navController, startDestination = "reservation") {
+
+    NavHost(navController = navController, startDestination = "login") {
         composable("register") {
             RegisterScreen(navController)
         }
@@ -47,13 +54,24 @@ fun AppNavigation() {
         composable("reservation") {
             TableLayoutScreen(viewModel = tableViewModel, navController = navController)
         }
+        composable("profile") {
+            // Pass the profileViewModel here
+            ProfileScreen(navController = navController, profileViewModel = profileViewModel)
+        }
+        composable("editprofil") {
+            // Pass the profileViewModel here
+            EditProfileScreen(navController = navController, profileViewModel = profileViewModel)
+        }
         composable("welcome/{username}", arguments = listOf(navArgument("username") {
             type = NavType.StringType
         })) { backStackEntry ->
             val username = backStackEntry.arguments?.getString("username")
-            WelcomeScreen(username = username ?: "User")
+            HomeScreen(viewModel = homeViewModel, navController = navController)
         }
-    }
+        composable("welcome"){
+            HomeScreen(viewModel = homeViewModel, navController = navController)
+
+        }
 }
 
 @Composable
@@ -64,4 +82,4 @@ fun WelcomeScreen(username: String) {
     ) {
         Text(text = "Welcome, $username!", style = MaterialTheme.typography.headlineMedium)
     }
-}
+}}

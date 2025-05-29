@@ -60,11 +60,13 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     implementation ("com.google.firebase:firebase-auth-ktx")
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
     implementation ("com.google.firebase:firebase-firestore-ktx")
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
     implementation ("androidx.navigation:navigation-compose:2.7.0")
     implementation ("androidx.hilt:hilt-navigation-compose:1.1.0")
-
+    implementation("androidx.compose.material3:material3:1.2.1") // Or the latest stable Material 3 version
+    implementation ("androidx.compose.ui:ui-text")
 }
