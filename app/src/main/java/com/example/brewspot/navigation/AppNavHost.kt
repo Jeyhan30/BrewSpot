@@ -50,7 +50,6 @@ fun AppNavigation() {
 
     // Inisialisasi ViewModel menggunakan factory atau default
     val loginViewModel: LoginViewModel = viewModel(factory = loginViewModelFactory)
-    val homeViewModel: HomeViewModel = viewModel()
     val cafeDetailViewModel: CafeDetailViewModel = viewModel()
     val tableViewModel: TableViewModel = viewModel() // ViewModel untuk TableLayoutScreen
     val profileViewModel: ProfileViewModel = viewModel()
@@ -65,9 +64,7 @@ fun AppNavigation() {
         composable("login") {
             LoginScreen(viewModel = loginViewModel, navController = navController)
         }
-        composable("reservation") {
-            TableLayoutScreen(viewModel = tableViewModel, navController = navController)
-        }
+
         composable("profile") {
             // Pass the profileViewModel here
             ProfileScreen(navController = navController, profileViewModel = profileViewModel)
@@ -87,34 +84,31 @@ fun AppNavigation() {
             type = NavType.StringType
         })) { backStackEntry ->
             val username = backStackEntry.arguments?.getString("username")
-        // Rute untuk HomeScreen dengan parameter username (jika ada)
-        composable(
-            "welcome/{username}",
-            arguments = listOf(navArgument("username") {
-                type = NavType.StringType
-                defaultValue = "User" // Default value jika tidak ada username
-            })
-        ) { backStackEntry ->
-            // Anda bisa menggunakan username di HomeScreen jika diperlukan
-            // val username = backStackEntry.arguments?.getString("username")
             HomeScreen(viewModel = homeViewModel, navController = navController)
         }
-        // Rute alternatif untuk HomeScreen tanpa parameter username
-        composable("welcome") {
+        composable("welcome"){
             HomeScreen(viewModel = homeViewModel, navController = navController)
-        }
 
+        }
         // Rute untuk CafeDetailScreen dengan parameter cafeId
         composable(
             "cafeDetail/{cafeId}",
             arguments = listOf(navArgument("cafeId") { type = NavType.StringType })
         ) { backStackEntry ->
             val cafeId = backStackEntry.arguments?.getString("cafeId")
-            CafeDetailScreen(navController = navController, cafeId = cafeId, viewModel = cafeDetailViewModel)
+            CafeDetailScreen(
+                navController = navController,
+                cafeId = cafeId,
+                viewModel = cafeDetailViewModel
+            )
         }
         composable("menu/{cafeId}") { backStackEntry ->
             val cafeId = backStackEntry.arguments?.getString("cafeId") ?: "default"
-            MenuScreen(navController = navController, cafeId = cafeId, menuViewModel = menuViewModel)
+            MenuScreen(
+                navController = navController,
+                cafeId = cafeId,
+                menuViewModel = menuViewModel
+            )
         }
         // MODIFIED: cart_screen now accepts a nullable cafeId argument
         composable(
@@ -125,72 +119,82 @@ fun AppNavigation() {
             })
         ) { backStackEntry ->
             val cafeId = backStackEntry.arguments?.getString("cafeId")
-            CartScreen(navController = navController, menuViewModel = menuViewModel, cafeId = cafeId)
-        }
-
-
-}
-
-        // Rute untuk TableLayoutScreen dengan cafeId sebagai path parameter
-        // dan parameter reservasi lainnya sebagai query parameters
-        composable(
-            "tableLayout/{cafeId}?" + // cafeId sebagai path parameter
-                    "userName={userName}&" +
-                    "date={date}&" +
-                    "time={time}&" +
-                    "totalGuests={totalGuests}",
-            arguments = listOf(
-                navArgument("cafeId") { type = NavType.StringType },
-                // Query parameters bisa diset sebagai nullable (true) atau dengan defaultValue
-                navArgument("userName") { type = NavType.StringType; nullable = true },
-                navArgument("date") { type = NavType.StringType; nullable = true },
-                navArgument("time") { type = NavType.StringType; nullable = true },
-                navArgument("totalGuests") { type = NavType.IntType; defaultValue = 0 }
-            )
-        ) { backStackEntry ->
-            val cafeId = backStackEntry.arguments?.getString("cafeId")
-            // Parameter kueri secara otomatis didekode oleh NavController.
-            // Anda tidak perlu URLDecoder.decode() lagi di sini.
-            val userName = backStackEntry.arguments?.getString("userName")
-            val date = backStackEntry.arguments?.getString("date")
-            val time = backStackEntry.arguments?.getString("time")
-            val totalGuests = backStackEntry.arguments?.getInt("totalGuests") ?: 0
-
-            TableLayoutScreen(
+            CartScreen(
                 navController = navController,
-                cafeId = cafeId,
-                userName = userName,
-                date = date,
-                time = time,
-                totalGuests = totalGuests,
-                viewModel = tableViewModel // Menggunakan TableViewModel yang sudah diinisialisasi
+                menuViewModel = menuViewModel,
+                cafeId = cafeId
             )
         }
 
-        composable("profile") {
-            ProfileScreen(navController = navController, profileViewModel = profileViewModel)
-        }
-        composable("editprofil") {
-            EditProfileScreen(navController = navController, profileViewModel = profileViewModel)
-        }
-        // Rute untuk layar riwayat (jika ada)
-        composable("history") {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Riwayat Anda akan muncul di sini.", style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-        // Rute untuk layar konfirmasi reservasi (setelah booking)
-        composable("confirmation_screen") {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Reservasi Anda berhasil dikonfirmasi!", style = MaterialTheme.typography.headlineMedium)
-            }
-        }
-        // Anda bisa menambahkan rute lain di sini
+
+
+
+    // Rute untuk TableLayoutScreen dengan cafeId sebagai path parameter
+    // dan parameter reservasi lainnya sebagai query parameters
+    composable(
+        "tableLayout/{cafeId}?" + // cafeId sebagai path parameter
+                "userName={userName}&" +
+                "date={date}&" +
+                "time={time}&" +
+                "totalGuests={totalGuests}",
+        arguments = listOf(
+            navArgument("cafeId") { type = NavType.StringType },
+            // Query parameters bisa diset sebagai nullable (true) atau dengan defaultValue
+            navArgument("userName") { type = NavType.StringType; nullable = true },
+            navArgument("date") { type = NavType.StringType; nullable = true },
+            navArgument("time") { type = NavType.StringType; nullable = true },
+            navArgument("totalGuests") { type = NavType.IntType; defaultValue = 0 }
+        )
+    ) { backStackEntry ->
+        val cafeId = backStackEntry.arguments?.getString("cafeId")
+        // Parameter kueri secara otomatis didekode oleh NavController.
+        // Anda tidak perlu URLDecoder.decode() lagi di sini.
+        val userName = backStackEntry.arguments?.getString("userName")
+        val date = backStackEntry.arguments?.getString("date")
+        val time = backStackEntry.arguments?.getString("time")
+        val totalGuests = backStackEntry.arguments?.getInt("totalGuests") ?: 0
+
+        TableLayoutScreen(
+            navController = navController,
+            cafeId = cafeId,
+            userName = userName,
+            date = date,
+            time = time,
+            totalGuests = totalGuests,
+            viewModel = tableViewModel // Menggunakan TableViewModel yang sudah diinisialisasi
+        )
     }
+
+    composable("profile") {
+        ProfileScreen(navController = navController, profileViewModel = profileViewModel)
+    }
+    composable("editprofil") {
+        EditProfileScreen(navController = navController, profileViewModel = profileViewModel)
+    }
+    // Rute untuk layar riwayat (jika ada)
+    composable("history") {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Riwayat Anda akan muncul di sini.",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+    // Rute untuk layar konfirmasi reservasi (setelah booking)
+    composable("confirmation_screen") {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Reservasi Anda berhasil dikonfirmasi!",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+    }
+    // Anda bisa menambahkan rute lain di sini
+}
 }

@@ -218,36 +218,36 @@ fun TableLayoutScreen(
             val fabContainerColor = if (canProceed) primaryBrown else primaryBrown.copy(alpha = 0.5f) // Dimmer when disabled
             val fabContentColor = if (canProceed) Color.White else Color.White.copy(alpha = 0.7f) // Dimmer text when disabled
 
-            val onClickAction: (() -> Unit)? = if (canProceed) {
-                {
-                    viewModel.bookSelectedTables() // Book all selected tables
-                    // Create reservation in Firestore
-                    if (cafeId != null && userName != null && date != null && time != null) {
-                        viewModel.createReservation(
-                            cafeId = cafeId,
-                            cafeName = viewModel.cafe?.name ?: "Unknown Cafe", // Get cafe name from ViewModel
-                            userName = userName,
-                            date = date,
-                            totalGuests = totalGuests,
-                            time = time,
-                            onSuccess = {
-                                Toast.makeText(context, "Reservasi berhasil!", Toast.LENGTH_SHORT).show()
-                                navController.navigate("confirmation_screen") { // Navigate to confirmation screen or home
-                                    popUpTo("home") { inclusive = false } // Pop up to home screen, not inclusive
-                                    launchSingleTop = true
-                                }
-                            },
-                            onFailure = { errorMessage ->
-                                Toast.makeText(context, "Reservasi gagal: $errorMessage", Toast.LENGTH_LONG).show()
-                            }
-                        )
-                    } else {
-                        Toast.makeText(context, "Data reservasi tidak lengkap.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } else {
-                null
-            }
+//            val onClickAction: (() -> Unit)? = if (canProceed) {
+//                {
+//                    viewModel.bookSelectedTables() // Book all selected tables
+//                    // Create reservation in Firestore
+//                    if (cafeId != null && userName != null && date != null && time != null) {
+//                        viewModel.createReservation(
+//                            cafeId = cafeId,
+//                            cafeName = viewModel.cafe?.name ?: "Unknown Cafe", // Get cafe name from ViewModel
+//                            userName = userName,
+//                            date = date,
+//                            totalGuests = totalGuests,
+//                            time = time,
+//                            onSuccess = {
+//                                Toast.makeText(context, "Reservasi berhasil!", Toast.LENGTH_SHORT).show()
+//                                navController.navigate("confirmation_screen") { // Navigate to confirmation screen or home
+//                                    popUpTo("home") { inclusive = false } // Pop up to home screen, not inclusive
+//                                    launchSingleTop = true
+//                                }
+//                            },
+//                            onFailure = { errorMessage ->
+//                                Toast.makeText(context, "Reservasi gagal: $errorMessage", Toast.LENGTH_LONG).show()
+//                            }
+//                        )
+//                    } else {
+//                        Toast.makeText(context, "Data reservasi tidak lengkap.", Toast.LENGTH_SHORT).show()
+//                    }
+//                }
+//            } else {
+//                null
+//            }
 
             AnimatedVisibility(
                 visible = fabVisible.value,

@@ -11,8 +11,7 @@ data class Cafe(
     val imagedetail: String = "",
     val jamOperasional: String = "",
     val image: String = "", // Untuk gambar potret/logo
-    val imageDetail: String = "" // Untuk gambar landscape/detail di atas
-    val image: String = "",
+    val imageDetail: String = "", // Untuk gambar landscape/detail di atas
     val menuItems: List<MenuItem> = emptyList() // Add this line for menu items
 
 ) {

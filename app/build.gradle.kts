@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0") // Atau versi terbaru
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

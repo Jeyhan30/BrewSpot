@@ -45,15 +45,20 @@ class CustomTopShape : Shape {
         val width = size.width
         val height = size.height
 
-        val curveStartEndY = height * 0.8f
-        val curveControlY = height * 1.2f
+        // Define the points for the curve
+        // The curve starts at a certain percentage down the left side,
+        // goes down, and then comes back up to the same percentage on the right side.
+        // The control point will be below these start/end points.
 
-        moveTo(0f, 0f)
-        lineTo(width, 0f)
-        lineTo(width, curveStartEndY)
+        val curveStartEndY = height * 0.8f // Start and end the curve at 75% of the height
+        val curveControlY = height * 1.2f // The control point reaches the full height (or slightly beyond if you want a deeper dip)
+
+        moveTo(0f, 0f) // Start at top-left
+        lineTo(width, 0f) // Line to top-right
+        lineTo(width, curveStartEndY) // Line down to the right start point of the curve
         quadraticBezierTo(
-            width / 2, curveControlY,
-            0f, curveStartEndY
+            width / 2, curveControlY, // Control point for the dip (center-bottom of the shape)
+            0f, curveStartEndY // End point at the left side, mirroring the right start point
         )
         close()
     })
@@ -107,7 +112,11 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
+                    // Adjust height to accommodate the curve
+                    // If your curve goes slightly below the original height,
+                    // you need to increase this height.
+                    // Let's try 280.dp to give some room for the dip if needed.
+                    .height(280.dp) // Slightly increased height to ensure curve is visible
                     .clip(CustomTopShape())
                     .background(brownColor)
             ) {
@@ -236,36 +245,30 @@ fun HomeScreen(
                 ) {
                     items(recommendedCafes) { cafe ->
                         CafeCardHorizontal(cafe = cafe) {
-                            // Navigate to CafeDetailScreen with cafeId
                             navController.navigate("cafeDetail/${cafe.id}")
-                            navController.navigate("menu/${cafe.id}")
 
                         }
                     }
                 }
             }
 
-            // Kafe Paling Populer Section (Vertical)
+// Kafe Paling Populer Section (Vertical)
             Column(modifier = Modifier.padding(bottom = 20.dp)) {
                 Text(
                     "Kafe Paling Populer",
                     color = Color.Black,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 24.dp)
+                    modifier = Modifier.padding(horizontal = 24.dp) // Apply horizontal padding to the title
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                LazyRow( // THIS IS THE KEY CHANGE for side-by-side arrangement
+                    contentPadding = PaddingValues(horizontal = 24.dp), // Padding around the entire row of items
+                    horizontalArrangement = Arrangement.spacedBy(12.dp) // Spacing BETWEEN each cafe card
                 ) {
                     items(popularCafes) { cafe ->
-                        CafeCardVertical(cafe = cafe) {
-                            // Navigate to CafeDetailScreen with cafeId
-                            navController.navigate("cafeDetail/${cafe.id}")
                         CafeCardVertical(cafe = cafe) { // Your individual card composable
-                            navController.navigate("menu/${cafe.id}")
-                        }
+                            navController.navigate("cafeDetail/${cafe.id}")                        }
                     }
                 }
             }
@@ -284,7 +287,7 @@ fun CategoryButton(text: String, onClick: () -> Unit) {
     ) {
         Text(text, color = Color.White, fontSize = 14.sp)
     }
-}
+}// Tambahkan ini di bagian bawah kode setelah CafeCardHorizontal dan CategoryButton
 @Composable
 fun CafeCardHorizontal(cafe: Cafe, onClick: () -> Unit) {
     val imageModel: Any = remember(cafe.image) {

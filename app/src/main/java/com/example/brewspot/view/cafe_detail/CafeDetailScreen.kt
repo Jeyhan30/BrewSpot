@@ -22,7 +22,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState // Import ini
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll // Import ini
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -66,7 +68,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import java.net.URLEncoder // Tambahkan import ini
+import java.net.URLEncoder
 
 // Color Constants
 private val BrownColor = Color(0xFF5D4037)
@@ -184,11 +186,13 @@ fun CafeDetailScreen(
     Scaffold(
         containerColor = Color.Transparent
     ) { paddingValues ->
+        // MODIFIED: Tambahkan verticalScroll ke Column utama
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                // Hapus .fillMaxSize() karena scrolling akan menentukan tinggi
                 .background(LightGrayBackground)
                 .padding(paddingValues)
+                .verticalScroll(rememberScrollState()) // Penambahan utama untuk scrolling
         ) {
             // Main Image Section (Top Image Section)
             Box(
@@ -327,7 +331,7 @@ fun CafeDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(WhiteBackground)
-                    .weight(1f)
+                    // Hapus .weight(1f) di sini, karena parent Column sudah scrollable
                     .offset(y = (-30).dp)
             ) {
                 // Reservation Card with white background and curved corners
