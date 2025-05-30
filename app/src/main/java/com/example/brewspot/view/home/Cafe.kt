@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/brewspot/view/home/Cafe.kt
 package com.example.brewspot.view.home
 
 import com.example.brewspot.view.menu.MenuItem
@@ -9,21 +10,21 @@ data class Cafe(
     val address: String = "",
     val imagedetail: String = "",
     val jamOperasional: String = "",
+    val image: String = "", // Untuk gambar potret/logo
+    val imageDetail: String = "" // Untuk gambar landscape/detail di atas
     val image: String = "",
     val menuItems: List<MenuItem> = emptyList() // Add this line for menu items
 
 ) {
     companion object {
         fun fromFirestore(doc: DocumentSnapshot): Cafe {
-            // Safely cast the 'image' field to a String
-            val imageUrl = doc.get("image") as? String ?: ""
-
             return Cafe(
                 id = doc.id,
                 name = doc.getString("Name") ?: "",
                 address = doc.getString("Address") ?: "",
                 jamOperasional = doc.getString("jam_operasional") ?: "",
-                image = imageUrl // Assign the safely casted string
+                image = doc.getString("image") ?: "", // Ambil dari field 'image'
+                imageDetail = doc.getString("imagedetail") ?: "" // Ambil dari field 'image_detail'
             )
         }
     }
