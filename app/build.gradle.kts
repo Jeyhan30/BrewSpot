@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.navigation.runtime.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -69,4 +70,5 @@ dependencies {
     implementation ("androidx.hilt:hilt-navigation-compose:1.1.0")
     implementation("androidx.compose.material3:material3:1.2.1") // Or the latest stable Material 3 version
     implementation ("androidx.compose.ui:ui-text")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
 }
