@@ -1,15 +1,20 @@
 // app/src/main/java/com/example/brewspot/view/home/Cafe.kt
 package com.example.brewspot.view.home
 
+import com.example.brewspot.view.menu.MenuItem
 import com.google.firebase.firestore.DocumentSnapshot
 
 data class Cafe(
     val id: String = "",
     val name: String = "",
     val address: String = "",
+    val imagedetail: String = "",
     val jamOperasional: String = "",
     val image: String = "", // Untuk gambar potret/logo
     val imageDetail: String = "" // Untuk gambar landscape/detail di atas
+    val image: String = "",
+    val menuItems: List<MenuItem> = emptyList() // Add this line for menu items
+
 ) {
     companion object {
         fun fromFirestore(doc: DocumentSnapshot): Cafe {

@@ -21,7 +21,12 @@ import com.example.brewspot.view.home.HomeViewModel
 import com.example.brewspot.view.login.LoginScreen
 import com.example.brewspot.view.login.LoginViewModel
 import com.example.brewspot.view.login.LoginViewModelFactory
+import com.example.brewspot.view.menu.CartScreen
+import com.example.brewspot.view.menu.MenuScreen
+import com.example.brewspot.view.menu.MenuViewModel
+import com.example.brewspot.view.profile.ChangePasswordScreen
 import com.example.brewspot.view.profile.EditProfileScreen
+import com.example.brewspot.view.profile.HelpSupportScreen
 import com.example.brewspot.view.profile.ProfileScreen
 import com.example.brewspot.view.profile.ProfileViewModel
 import com.example.brewspot.view.register.RegisterScreen
@@ -49,6 +54,9 @@ fun AppNavigation() {
     val cafeDetailViewModel: CafeDetailViewModel = viewModel()
     val tableViewModel: TableViewModel = viewModel() // ViewModel untuk TableLayoutScreen
     val profileViewModel: ProfileViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel() // <-- Correctly initialize HomeViewModel here
+    val menuViewModel: MenuViewModel = viewModel() // Initialize MenuViewModel here
+
 
     NavHost(navController = navController, startDestination = "login") {
         composable("register") {
@@ -57,6 +65,28 @@ fun AppNavigation() {
         composable("login") {
             LoginScreen(viewModel = loginViewModel, navController = navController)
         }
+        composable("reservation") {
+            TableLayoutScreen(viewModel = tableViewModel, navController = navController)
+        }
+        composable("profile") {
+            // Pass the profileViewModel here
+            ProfileScreen(navController = navController, profileViewModel = profileViewModel)
+        }
+        composable("editprofil") {
+            // Pass the profileViewModel here
+            EditProfileScreen(navController = navController, profileViewModel = profileViewModel)
+        }
+        composable("editsandi") {
+            // Pass the profileViewModel here
+            ChangePasswordScreen(navController = navController, profileViewModel = profileViewModel)
+        }
+        composable("help_support") { // <--- ADD THIS NEW ROUTE
+            HelpSupportScreen(navController = navController)
+        }
+        composable("welcome/{username}", arguments = listOf(navArgument("username") {
+            type = NavType.StringType
+        })) { backStackEntry ->
+            val username = backStackEntry.arguments?.getString("username")
         // Rute untuk HomeScreen dengan parameter username (jika ada)
         composable(
             "welcome/{username}",
@@ -82,6 +112,18 @@ fun AppNavigation() {
             val cafeId = backStackEntry.arguments?.getString("cafeId")
             CafeDetailScreen(navController = navController, cafeId = cafeId, viewModel = cafeDetailViewModel)
         }
+        composable("menu/{cafeId}") { backStackEntry ->
+            val cafeId = backStackEntry.arguments?.getString("cafeId") ?: "default"
+            // Teruskan instance ViewModel yang sudah ada
+            MenuScreen(navController = navController, cafeId = cafeId, menuViewModel = menuViewModel)
+        }
+        composable("cart_screen") {
+            // Teruskan instance ViewModel yang sama ke CartScreen
+            CartScreen(navController = navController, menuViewModel = menuViewModel)
+        }
+
+
+}
 
         // Rute untuk TableLayoutScreen dengan cafeId sebagai path parameter
         // dan parameter reservasi lainnya sebagai query parameters

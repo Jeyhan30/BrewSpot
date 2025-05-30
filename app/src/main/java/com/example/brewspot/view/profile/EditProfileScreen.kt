@@ -2,8 +2,11 @@ package com.example.brewspot.view.profile
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Base64
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -46,14 +50,53 @@ fun EditProfileScreen(
     // State for editable fields, initialized with current user data
     var name by remember { mutableStateOf(currentUser?.username ?: "") }
     var phoneNumber by remember { mutableStateOf(currentUser?.phoneNumber ?: "") } // <--- CHANGED: email replaced with phoneNumber
-
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    // State untuk Base64 string dari gambar profil yang sedang ditampilkan atau yang baru dipilih
+    var displayedImageBase64 by remember { mutableStateOf<String?>(null) }
     // Update state when currentUser changes (e.g., after fetching data or saving)
     LaunchedEffect(currentUser) {
         currentUser?.let {
             name = it.username
-            phoneNumber = it.phoneNumber // <--- CHANGED
+            phoneNumber = it.phoneNumber
+            // Jika currentUser memiliki imageUrl (Base64), tampilkan
+            if (it.image.isNotEmpty()) {
+                displayedImageBase64 = it.image
+            } else {
+                displayedImageBase64 = null
+            }
+            selectedImageUri = null // Reset URI setelah data user di-load/update
         }
     }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                // Simpan URI sementara untuk menampilkan preview
+                selectedImageUri = it
+                // Konversi Uri ke Base64 string
+                val base64String = profileViewModel.convertUriToBase64(context, it)
+                if (base64String != null) {
+                    displayedImageBase64 = base64String // Update gambar yang ditampilkan segera
+                    // Langsung update profil user dengan Base64 gambar
+                    profileViewModel.updateProfile(
+                        username = name,
+                        phoneNumber = phoneNumber,
+                        base64Image = base64String, // Teruskan Base64 string ke ViewModel
+                        onSuccess = {
+                            Toast.makeText(context, "Profil dan foto berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                        },
+                        onFailure = { errorMessage ->
+                            Toast.makeText(context, "Gagal memperbarui foto: $errorMessage", Toast.LENGTH_LONG).show()
+                            displayedImageBase64 = currentUser?.image // Kembalikan ke gambar sebelumnya jika gagal
+                        }
+                    )
+                } else {
+                    Toast.makeText(context, "Gagal mengkonversi gambar.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    )
 
     val brownColor = Color(0xFF5D4037) // Dark brown color
     val lightGrayBorder = Color(0xFFE0E0E0) // Light gray for text field borders
@@ -100,50 +143,46 @@ fun EditProfileScreen(
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .background(Color.Gray), // Placeholder background
+                    .background(Color.Gray)
+                    .clickable { imagePickerLauncher.launch("image/*") }, // KLIK UNTUK MEMILIH GAMBAR
                 contentAlignment = Alignment.Center
             ) {
-                val imageModel: Any? = remember(currentUser?.image) {
-                    val imageString = currentUser?.image
-                    if (imageString.isNullOrEmpty()) {
-                        null
-                    } else if (imageString.startsWith("http://") || imageString.startsWith("https://")) {
-                        imageString // This is a URL
-                    } else if (imageString.startsWith("data:image/")) {
-                        // This might be Base64, try decoding
-                        decodeBase64ToBitmap(imageString)
-                    } else {
-                        // Unknown format, try decoding as raw Base64
-                        decodeBase64ToBitmap(imageString)
-                    }
+                // Menentukan gambar yang akan ditampilkan
+                val imageBitmap: Bitmap? = remember(displayedImageBase64) {
+                    decodeBase64ToBitmap(displayedImageBase64)
                 }
 
-                val painter = rememberAsyncImagePainter(
-                    model = imageModel, // Model can be String URL or Bitmap
-                    placeholder = painterResource(id = R.drawable.user), // Default placeholder
-                    error = painterResource(id = R.drawable.user) // Default error image
-                )
-                Image(
-                    painter = painter,
-                    contentDescription = "Profile Picture",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+                if (imageBitmap != null) {
+                    Image(
+                        bitmap = imageBitmap.asImageBitmap(), // Gunakan asImageBitmap untuk Bitmap
+                        contentDescription = "Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    // Placeholder jika tidak ada gambar atau gagal decode
+                    Image(
+                        painter = painterResource(id = R.drawable.user),
+                        contentDescription = "Default Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
                 // Edit Icon Overlay
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(brownColor) // Background for the edit icon
-                        .border(2.dp, Color.White, CircleShape) // White border
+                        .background(brownColor)
+                        .border(2.dp, Color.White, CircleShape)
                         .align(Alignment.BottomEnd)
-                        .offset(x = (-4).dp, y = (-4).dp) // Adjust position to match image
-                        .clickable { /* TODO: Implement image picker */ },
+                        .offset(x = (-4).dp, y = (-4).dp)
+                        .clickable { imagePickerLauncher.launch("image/*") }, // KLIK UNTUK MEMILIH GAMBAR
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.edit), // Assuming you have an edit icon
+                        painter = painterResource(id = R.drawable.edit),
                         contentDescription = "Edit Profile Picture",
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
