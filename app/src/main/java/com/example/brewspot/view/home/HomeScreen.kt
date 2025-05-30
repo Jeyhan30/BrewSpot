@@ -69,15 +69,17 @@ fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
     if (base64Str.isNullOrEmpty()) {
         return null
     }
+    // Check if the string contains the "data:image" prefix
     val cleanBase64Str = if (base64Str.startsWith("data:image", ignoreCase = true)) {
-        base64Str.substringAfter(",")
+        base64Str.substringAfter(",") // Extract the actual Base64 data after the comma
     } else {
-        base64Str
+        base64Str // If no prefix, use the string as is
     }
     return try {
         val decodedBytes = Base64.decode(cleanBase64Str, Base64.DEFAULT)
         BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
     } catch (e: IllegalArgumentException) {
+        // Log the error for debugging purposes
         e.printStackTrace()
         null
     }
@@ -243,7 +245,8 @@ fun HomeScreen(
                 ) {
                     items(recommendedCafes) { cafe ->
                         CafeCardHorizontal(cafe = cafe) {
-                            println("Clicked on ${cafe.name}")
+                            navController.navigate("menu/${cafe.id}")
+
                         }
                     }
                 }
@@ -265,7 +268,7 @@ fun HomeScreen(
                 ) {
                     items(popularCafes) { cafe ->
                         CafeCardVertical(cafe = cafe) { // Your individual card composable
-                            println("Clicked on ${cafe.name}")
+                            navController.navigate("menu/${cafe.id}")
                         }
                     }
                 }
@@ -288,8 +291,16 @@ fun CategoryButton(text: String, onClick: () -> Unit) {
 }// Tambahkan ini di bagian bawah kode setelah CafeCardHorizontal dan CategoryButton
 @Composable
 fun CafeCardHorizontal(cafe: Cafe, onClick: () -> Unit) {
-    val bitmap: Bitmap? = remember(cafe.image) {
-        decodeBase64ToBitmap(cafe.image)
+    val imageModel: Any = remember(cafe.image) {
+        if (cafe.image.isNullOrEmpty()) {
+            R.drawable.cafeeee // Jika string gambar kosong, gunakan placeholder
+        } else if (cafe.image.startsWith("http://") || cafe.image.startsWith("https://")) {
+            cafe.image // Jika ini adalah URL, biarkan Coil menanganinya langsung sebagai String
+        } else {
+            // Jika bukan URL dan tidak kosong, anggap itu Base64 (dengan atau tanpa prefix)
+            // dan dekode menjadi Bitmap. Gunakan R.drawable.cafeeee sebagai fallback jika decode gagal.
+            decodeBase64ToBitmap(cafe.image) ?: R.drawable.cafeeee
+        }
     }
 
     Card(
@@ -303,8 +314,11 @@ fun CafeCardHorizontal(cafe: Cafe, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
-                painter = if (bitmap != null) rememberAsyncImagePainter(model = bitmap)
-                else painterResource(id = R.drawable.cafeeee),
+                painter = rememberAsyncImagePainter(
+                    model = imageModel,
+                    error = painterResource(id = R.drawable.cafeeee),
+                    placeholder = painterResource(id = R.drawable.cafeeee)
+                ),
                 contentDescription = cafe.name,
                 modifier = Modifier
                     .fillMaxSize()
@@ -332,8 +346,16 @@ fun CafeCardHorizontal(cafe: Cafe, onClick: () -> Unit) {
 }
 @Composable
 fun CafeCardVertical(cafe: Cafe, onClick: () -> Unit) {
-    val bitmap: Bitmap? = remember(cafe.image) {
-        decodeBase64ToBitmap(cafe.image)
+    val imageModel: Any = remember(cafe.image) {
+        if (cafe.image.isNullOrEmpty()) {
+            R.drawable.cafeeee // Jika string gambar kosong, gunakan placeholder
+        } else if (cafe.image.startsWith("http://") || cafe.image.startsWith("https://")) {
+            cafe.image // Jika ini adalah URL, biarkan Coil menanganinya langsung sebagai String
+        } else {
+            // Jika bukan URL dan tidak kosong, anggap itu Base64 (dengan atau tanpa prefix)
+            // dan dekode menjadi Bitmap. Gunakan R.drawable.cafeeee sebagai fallback jika decode gagal.
+            decodeBase64ToBitmap(cafe.image) ?: R.drawable.cafeeee
+        }
     }
 
     Card(
@@ -347,8 +369,11 @@ fun CafeCardVertical(cafe: Cafe, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
-                painter = if (bitmap != null) rememberAsyncImagePainter(model = bitmap)
-                else painterResource(id = R.drawable.cafeeee),
+                painter = rememberAsyncImagePainter(
+                    model = imageModel,
+                    error = painterResource(id = R.drawable.cafeeee),
+                    placeholder = painterResource(id = R.drawable.cafeeee)
+                ),
                 contentDescription = cafe.name,
                 modifier = Modifier
                     .fillMaxSize()

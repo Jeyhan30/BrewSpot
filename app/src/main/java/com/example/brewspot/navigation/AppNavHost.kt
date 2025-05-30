@@ -19,7 +19,12 @@ import com.example.brewspot.view.home.HomeViewModel
 import com.example.brewspot.view.login.LoginScreen
 import com.example.brewspot.view.login.LoginViewModel
 import com.example.brewspot.view.login.LoginViewModelFactory
+import com.example.brewspot.view.menu.CartScreen
+import com.example.brewspot.view.menu.MenuScreen
+import com.example.brewspot.view.menu.MenuViewModel
+import com.example.brewspot.view.profile.ChangePasswordScreen
 import com.example.brewspot.view.profile.EditProfileScreen
+import com.example.brewspot.view.profile.HelpSupportScreen
 import com.example.brewspot.view.profile.ProfileScreen
 import com.example.brewspot.view.profile.ProfileViewModel
 import com.example.brewspot.view.register.RegisterScreen
@@ -42,6 +47,7 @@ fun AppNavigation() {
     val tableViewModel: TableViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel() // <-- Correctly initialize HomeViewModel here
+    val menuViewModel: MenuViewModel = viewModel() // Initialize MenuViewModel here
 
 
     NavHost(navController = navController, startDestination = "login") {
@@ -62,6 +68,13 @@ fun AppNavigation() {
             // Pass the profileViewModel here
             EditProfileScreen(navController = navController, profileViewModel = profileViewModel)
         }
+        composable("editsandi") {
+            // Pass the profileViewModel here
+            ChangePasswordScreen(navController = navController, profileViewModel = profileViewModel)
+        }
+        composable("help_support") { // <--- ADD THIS NEW ROUTE
+            HelpSupportScreen(navController = navController)
+        }
         composable("welcome/{username}", arguments = listOf(navArgument("username") {
             type = NavType.StringType
         })) { backStackEntry ->
@@ -72,6 +85,17 @@ fun AppNavigation() {
             HomeScreen(viewModel = homeViewModel, navController = navController)
 
         }
+        composable("menu/{cafeId}") { backStackEntry ->
+            val cafeId = backStackEntry.arguments?.getString("cafeId") ?: "default"
+            // Teruskan instance ViewModel yang sudah ada
+            MenuScreen(navController = navController, cafeId = cafeId, menuViewModel = menuViewModel)
+        }
+        composable("cart_screen") {
+            // Teruskan instance ViewModel yang sama ke CartScreen
+            CartScreen(navController = navController, menuViewModel = menuViewModel)
+        }
+
+
 }
 
 @Composable

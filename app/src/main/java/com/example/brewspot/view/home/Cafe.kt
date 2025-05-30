@@ -1,13 +1,17 @@
 package com.example.brewspot.view.home
 
+import com.example.brewspot.view.menu.MenuItem
 import com.google.firebase.firestore.DocumentSnapshot
 
 data class Cafe(
     val id: String = "",
     val name: String = "",
     val address: String = "",
+    val imagedetail: String = "",
     val jamOperasional: String = "",
-    val image: String = "" // This will contain a single Base64 string
+    val image: String = "",
+    val menuItems: List<MenuItem> = emptyList() // Add this line for menu items
+
 ) {
     companion object {
         fun fromFirestore(doc: DocumentSnapshot): Cafe {

@@ -21,7 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -99,6 +101,7 @@ fun ProfileScreen(
     val lightGrayBackground = Color(0xFFE0E0E0) // Light gray for the "Masuk" button background
     val darkGrayText = Color(0xFF424242) // Dark gray for text
     val currentUser by profileViewModel.currentUser.collectAsState() // Observe user data
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -189,13 +192,14 @@ fun ProfileScreen(
                 ProfileOptionCard(
                     icon = Icons.Default.Lock,
                     text = "Ganti Kata Sandi",
-                    onClick = { /* TODO: Navigate to Change Password */ }
+                    onClick = { navController.navigate("editsandi" )
+                              }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 ProfileOptionCard(
                     icon = painterResource(id = R.drawable.question), // Using QuestionMark as a placeholder for help icon
                     text = "Bantuan dan Dukungan",
-                    onClick = { /* TODO: Navigate to Help & Support */ }
+                    onClick = { navController.navigate("help_support") }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 ProfileOptionCard(
@@ -205,16 +209,49 @@ fun ProfileScreen(
                 )
                 Spacer(modifier = Modifier.height(24.dp)) // Space before logout
 
-                // Logout Button
                 ProfileOptionCard(
                     icon = painterResource(id = R.drawable.logout), // Assuming you have a logout icon in your drawables
                     text = "Logout",
-                    onClick = { /* TODO: Handle Logout */ }
+                    onClick = { showLogoutDialog = true } // Show dialog on click
                 )
+
             }
         }
     }
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false }, // Dismiss when clicking outside or pressing back
+            title = { Text("Konfirmasi Logout") },
+            text = { Text("Apakah Anda yakin ingin logout?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        profileViewModel.logout() // Call logout function from ViewModel
+                        navController.navigate("login") { // Navigate back to login screen after logout
+                            popUpTo("login") { // Clear back stack up to login
+                                inclusive = true
+                            }
+                        }
+                        showLogoutDialog = false // Dismiss dialog
+                    }
+                ) {
+                    Text("Logout", color = brownColor)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false } // Dismiss dialog
+                ) {
+                    Text("Batal", color = Color.Gray)
+                }
+            },
+            containerColor = Color.White, // Background of the dialog
+            titleContentColor = Color.Black,
+            textContentColor = Color.DarkGray
+        )
+    }
 }
+
 
 @Composable
 fun ProfileOptionCard(
