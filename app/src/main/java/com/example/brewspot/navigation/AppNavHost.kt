@@ -87,12 +87,18 @@ fun AppNavigation() {
         }
         composable("menu/{cafeId}") { backStackEntry ->
             val cafeId = backStackEntry.arguments?.getString("cafeId") ?: "default"
-            // Teruskan instance ViewModel yang sudah ada
             MenuScreen(navController = navController, cafeId = cafeId, menuViewModel = menuViewModel)
         }
-        composable("cart_screen") {
-            // Teruskan instance ViewModel yang sama ke CartScreen
-            CartScreen(navController = navController, menuViewModel = menuViewModel)
+        // MODIFIED: cart_screen now accepts a nullable cafeId argument
+        composable(
+            route = "cart_screen?cafeId={cafeId}",
+            arguments = listOf(navArgument("cafeId") {
+                type = NavType.StringType
+                nullable = true // Allow cafeId to be null if navigating to cart from other places
+            })
+        ) { backStackEntry ->
+            val cafeId = backStackEntry.arguments?.getString("cafeId")
+            CartScreen(navController = navController, menuViewModel = menuViewModel, cafeId = cafeId)
         }
 
 

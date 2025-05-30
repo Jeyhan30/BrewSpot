@@ -28,12 +28,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.brewspot.R // Pastikan R diimpor dengan benar
-import com.example.brewspot.view.home.CustomTopShape // Re-using CustomTopShape from HomeScreen (if exists)
+import com.example.brewspot.R
+import com.example.brewspot.view.home.CustomTopShape
 import java.text.NumberFormat
 import java.util.Locale
 
-// Re-using the decodeBase64ToBitmap function from HomeScreen or ProfileScreen
 fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
     if (base64Str.isNullOrEmpty()) {
         return null
@@ -56,30 +55,26 @@ fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
 @Composable
 fun MenuScreen(
     navController: NavController,
-    cafeId: String, // Receive cafeId from navigation
-    menuViewModel: MenuViewModel// Injeksi ViewModel
+    cafeId: String,
+    menuViewModel: MenuViewModel
 ) {
     val cafeDetails by menuViewModel.cafeDetails.collectAsState()
     val menuItems by menuViewModel.menuItems.collectAsState()
-    val cartItems by menuViewModel.cartItems.collectAsState() // Observe cart items
-    val totalPrice by menuViewModel.totalPrice.collectAsState() // Observe total price
+    val cartItems by menuViewModel.cartItems.collectAsState()
+    val totalPrice by menuViewModel.totalPrice.collectAsState()
 
-    var searchQuery by remember { mutableStateOf("") } // State for search bar
+    var searchQuery by remember { mutableStateOf("") }
 
     val brownColor = Color(0xFF5D4037)
 
-    // Muat data cafe dan menu saat komponen pertama kali dibuat atau cafeId berubah
     LaunchedEffect(cafeId) {
         menuViewModel.fetchCafeAndMenuItems(cafeId)
     }
 
     Scaffold(
         topBar = {
-            // No TopAppBar needed if the image is the top bar.
-            // If you want a traditional AppBar, uncomment below and adjust.
         },
         bottomBar = {
-            // "Selanjutnya" button acts as a bottom bar
             BottomAppBar(
                 containerColor = Color.White,
                 tonalElevation = 8.dp,
@@ -87,27 +82,22 @@ fun MenuScreen(
             ) {
                 Button(
                     onClick = {
-                        // TODO: Implement navigation to next screen (e.g., checkout/cart summary)
-                        // Anda bisa meneruskan cartItems ke layar berikutnya
-                        // Atau langsung memanggil menuViewModel.checkout() jika tombol ini langsung untuk finalisasi pesanan
-                        if (cartItems.isNotEmpty()) {
-                            // Contoh navigasi ke layar ringkasan keranjang
-                            // Pastikan Anda memiliki rute 'cart_summary_screen' dan dapat menerima objek data
-                            // navContoller.navigate("cart_summary_screen") // Ini butuh implementasi penerusan data
-                            // Untuk saat ini, kita akan memanggil checkout langsung
-                            menuViewModel.checkout()
-                        }
+                        // MODIFIED: Navigate to cart_screen with cafeId
+                        navController.navigate("cart_screen?cafeId=${cafeId}")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
-                        .padding(horizontal = 24.dp), // Add horizontal padding for the button
+                        .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = brownColor),
-                    enabled = cartItems.isNotEmpty() // Aktifkan tombol hanya jika keranjang tidak kosong
+                    // Enable button only if there are items from the current cafe in the cart
+                    enabled = cartItems.any { it.cafeId == cafeId }
                 ) {
+                    // Display total price for items from the current cafe
+                    val currentCafeTotalPrice = cartItems.filter { it.cafeId == cafeId }.sumOf { it.price * it.quantity }
                     Text(
-                        "Selanjutnya (${formatRupiah(totalPrice)})", // Tampilkan total harga di tombol
+                        "Selanjutnya (${formatRupiah(currentCafeTotalPrice)})",
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
@@ -120,31 +110,30 @@ fun MenuScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF0F0F0)) // Light gray background
+                .background(Color(0xFFF0F0F0))
         ) {
-            // Top Section - Cafe Image and Search Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp) // Height of the image section
+                    .height(200.dp)
             ) {
                 val cafeImageModel: Any? = remember(cafeDetails?.image) {
                     val imageString = cafeDetails?.image
                     if (imageString.isNullOrEmpty()) {
                         null
                     } else if (imageString.startsWith("http://") || imageString.startsWith("https://")) {
-                        imageString // Ini adalah URL
+                        imageString
                     } else if (imageString.startsWith("data:image/")) {
                         decodeBase64ToBitmap(imageString)
                     } else {
-                        decodeBase64ToBitmap(imageString) // Coba dekode sebagai Base64 murni
+                        decodeBase64ToBitmap(imageString)
                     }
                 }
 
                 val painter = rememberAsyncImagePainter(
                     model = cafeImageModel,
-                    placeholder = painterResource(id = R.drawable.cafeeee), // Default placeholder
-                    error = painterResource(id = R.drawable.cafeeee) // Default error image
+                    placeholder = painterResource(id = R.drawable.cafeeee),
+                    error = painterResource(id = R.drawable.cafeeee)
                 )
 
                 Image(
@@ -154,11 +143,10 @@ fun MenuScreen(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Overlay for Back Button, Cafe Name, and Bag Icon
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)) // Semi-transparent overlay
+                        .background(Color.Black.copy(alpha = 0.3f))
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Row(
@@ -175,7 +163,7 @@ fun MenuScreen(
                             )
                         }
                         Text(
-                            text = cafeDetails?.name ?: "Jokopi", // Display cafe name from ViewModel
+                            text = cafeDetails?.name ?: "Jokopi",
                             color = Color.White,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
@@ -187,18 +175,21 @@ fun MenuScreen(
                         )
                         Box(contentAlignment = Alignment.Center) {
                             IconButton(onClick = {
-                                navController.navigate("cart_screen")
+                                // MODIFIED: Pass cafeId when navigating to cart_screen
+                                navController.navigate("cart_screen?cafeId=${cafeId}")
                             }) {
                                 Icon(
-                                    painter = painterResource(id = R.drawable.bag), // Assuming you have this icon
+                                    painter = painterResource(id = R.drawable.bag),
                                     contentDescription = "Shopping Bag",
                                     tint = Color.White,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
-                            if (cartItems.isNotEmpty()) {
+                            // Only show count of items from the current cafe
+                            val itemsInCurrentCafeCart = cartItems.count { it.cafeId == cafeId }
+                            if (itemsInCurrentCafeCart > 0) {
                                 Text(
-                                    text = cartItems.size.toString(),
+                                    text = itemsInCurrentCafeCart.toString(),
                                     color = Color.White,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
@@ -213,7 +204,6 @@ fun MenuScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    // Search Bar
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
@@ -245,11 +235,10 @@ fun MenuScreen(
                 }
             }
 
-            // Menu Section
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp) // Tambahkan padding horizontal ke Column ini
+                    .padding(horizontal = 16.dp)
             ) {
                 Text(
                     "Menu",
@@ -261,7 +250,7 @@ fun MenuScreen(
 
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp) // Padding at the bottom of the list
+                    contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
                     val filteredMenuItems = menuItems.filter {
                         it.name.contains(searchQuery, ignoreCase = true) ||
@@ -269,7 +258,7 @@ fun MenuScreen(
                     }
                     items(filteredMenuItems) { item ->
                         MenuItemCard(item = item) {
-                            menuViewModel.addToCart(item) // Hubungkan ke ViewModel
+                            menuViewModel.addToCart(item)
                         }
                     }
                 }
@@ -296,25 +285,23 @@ fun MenuItemCard(item: MenuItem, onAddClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Menu Item Image
                 val imagePainter = rememberAsyncImagePainter(
                     model = item.imageUrl,
-                    placeholder = painterResource(id = R.drawable.coffee), // Default placeholder
-                    error = painterResource(id = R.drawable.coffee) // Default error image
+                    placeholder = painterResource(id = R.drawable.coffee),
+                    error = painterResource(id = R.drawable.coffee)
                 )
                 Image(
                     painter = imagePainter,
                     contentDescription = item.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(130.dp) // Slightly adjusted size
+                        .size(130.dp)
                         .clip(RoundedCornerShape(8.dp))
                 )
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Menu Item Details
                 Column(
-                    modifier = Modifier.weight(1f) // Take remaining space
+                    modifier = Modifier.weight(1f)
                 ) {
 
                     Text(
@@ -335,20 +322,19 @@ fun MenuItemCard(item: MenuItem, onAddClick: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = formatRupiah(item.price), // Format harga
+                        text = formatRupiah(item.price),
                         color = Color.Black,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
-                    // "Tambah" Button
                     Button(
-                        onClick = onAddClick, // Terhubung ke lambda onAddClick
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D4037)), // Brown color for button
+                        onClick = onAddClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D4037)),
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp),
                         modifier = Modifier
-                            .padding(start = 80.dp) // Add some top padding
-                            .width(80.dp) // Fixed width for the button
+                            .padding(start = 80.dp)
+                            .width(80.dp)
                     ) {
                         Text("Tambah", color = Color.White, fontSize = 12.sp)
                     }
@@ -358,7 +344,6 @@ fun MenuItemCard(item: MenuItem, onAddClick: () -> Unit) {
     }
 }
 
-// Fungsi helper untuk memformat harga ke dalam Rupiah
 fun formatRupiah(number: Double): String {
     val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
     return format.format(number)

@@ -25,21 +25,29 @@ class MenuViewModel : ViewModel() {
     private val _menuItems = MutableStateFlow<List<MenuItem>>(emptyList())
     val menuItems: StateFlow<List<MenuItem>> = _menuItems
 
+    // Cart items for the current session.
+    // Each MenuItem in this list will now correctly have its cafeId set.
     private val _cartItems = MutableStateFlow<List<MenuItem>>(emptyList())
     val cartItems: StateFlow<List<MenuItem>> = _cartItems.asStateFlow()
 
     private val _totalPrice = MutableStateFlow(0.0)
     val totalPrice: StateFlow<Double> = _totalPrice.asStateFlow()
 
+    // Store the currently active cafeId in the ViewModel
+    private var currentCafeId: String? = null
+
     fun addToCart(menuItem: MenuItem) {
         _cartItems.update { currentItems ->
-            val existingItem = currentItems.find { it.id == menuItem.id }
+            // Ensure the menuItem added to cart has the correct cafeId
+            val itemWithCafeId = menuItem.copy(cafeId = currentCafeId ?: "")
+
+            val existingItem = currentItems.find { it.id == itemWithCafeId.id && it.cafeId == itemWithCafeId.cafeId }
             if (existingItem != null) {
                 currentItems.map {
-                    if (it.id == menuItem.id) it.copy(quantity = it.quantity + 1) else it
+                    if (it.id == itemWithCafeId.id && it.cafeId == itemWithCafeId.cafeId) it.copy(quantity = it.quantity + 1) else it
                 }
             } else {
-                menuItem.copy(quantity = 1).let { newItem ->
+                itemWithCafeId.copy(quantity = 1).let { newItem ->
                     currentItems + newItem
                 }
             }
@@ -49,13 +57,13 @@ class MenuViewModel : ViewModel() {
 
     fun removeFromCart(menuItem: MenuItem) {
         _cartItems.update { currentItems ->
-            val existingItem = currentItems.find { it.id == menuItem.id }
+            val existingItem = currentItems.find { it.id == menuItem.id && it.cafeId == menuItem.cafeId }
             if (existingItem != null && existingItem.quantity > 1) {
                 currentItems.map {
-                    if (it.id == menuItem.id) it.copy(quantity = it.quantity - 1) else it
+                    if (it.id == menuItem.id && it.cafeId == menuItem.cafeId) it.copy(quantity = it.quantity - 1) else it
                 }
             } else {
-                currentItems.filter { it.id != menuItem.id }
+                currentItems.filter { it.id != menuItem.id || it.cafeId != menuItem.cafeId }
             }
         }
         calculateTotalPrice()
@@ -64,11 +72,12 @@ class MenuViewModel : ViewModel() {
     private fun calculateTotalPrice() {
         _totalPrice.value = _cartItems.value.sumOf { it.price * it.quantity }
     }
-
-    fun checkout() {
+    fun checkout(cafeId: String) { // MODIFIED: Accept cafeId
         viewModelScope.launch {
-            if (_cartItems.value.isEmpty()) {
-                println("Keranjang kosong, tidak ada yang bisa di-checkout.")
+            val itemsToCheckout = _cartItems.value.filter { it.cafeId == cafeId } // MODIFIED: Filter by cafeId
+
+            if (itemsToCheckout.isEmpty()) {
+                println("Keranjang kosong untuk kafe ini, tidak ada yang bisa di-checkout.")
                 return@launch
             }
 
@@ -83,31 +92,29 @@ class MenuViewModel : ViewModel() {
                 val userDoc = firestore.collection("users").document(currentUser.uid).get().await()
                 val username = userDoc.getString("username") ?: "Unknown User"
                 val email = userDoc.getString("email") ?: currentUser.email ?: "Unknown Email"
-                val phoneNumber = userDoc.getString("phoneNumber") ?: "N/A" // Asumsi ada field phoneNumber, jika tidak ada akan "N/A"
+                val phoneNumber = userDoc.getString("phoneNumber") ?: "N/A"
 
                 println("Proses checkout dimulai untuk User: $username, Email: $email, Phone: $phoneNumber")
 
-                val orderItems = _cartItems.value.map { item ->
+                val orderItems = itemsToCheckout.map { item -> // MODIFIED: Use filtered items
                     hashMapOf(
                         "menuItemId" to item.id,
                         "name" to item.name,
                         "quantity" to item.quantity,
-                        "priceAtOrder" to item.price
+                        "priceAtOrder" to item.price,
+                        "cafeId" to item.cafeId // Ensure cafeId is saved with each item
                     )
                 }
 
                 val orderHistory = hashMapOf(
                     "items" to orderItems,
                     "timestamp" to FieldValue.serverTimestamp(),
-                    "totalPrice" to _totalPrice.value,
+                    "totalPrice" to itemsToCheckout.sumOf { it.price * it.quantity }, // MODIFIED: Use filtered total
                     "userId" to currentUser.uid,
-                    "username" to username, // Tambahkan username
-                    "userEmail" to email,   // Tambahkan email
-                    "userPhone" to phoneNumber, // Tambahkan nomor telepon (jika tersedia)
-                    "cafeId" to _cafeDetails.value?.id,
-
-
-
+                    "username" to username,
+                    "userEmail" to email,
+                    "userPhone" to phoneNumber,
+                    "cafeId" to cafeId // Use the cafeId for the order
                 )
 
                 firestore.collection("history")
@@ -115,8 +122,10 @@ class MenuViewModel : ViewModel() {
                     .await()
 
                 println("Pesanan berhasil disimpan ke database history!")
-                _cartItems.value = emptyList()
-                _totalPrice.value = 0.0
+                _cartItems.update { currentItems ->
+                    currentItems.filterNot { it.cafeId == cafeId } // MODIFIED: Remove only the checked out items
+                }
+                calculateTotalPrice() // Recalculate total price after removing items
 
             } catch (e: Exception) {
                 println("Gagal menyimpan pesanan ke database: ${e.message}")
@@ -126,6 +135,12 @@ class MenuViewModel : ViewModel() {
     }
 
     fun fetchCafeAndMenuItems(cafeId: String) {
+        currentCafeId = cafeId // Set the current cafeId
+        // Optionally, clear the cart when switching cafes if you want separate carts per cafe session.
+        // If you want a global cart that can contain items from multiple cafes, remove this line.
+        // _cartItems.value = emptyList()
+        // _totalPrice.value = 0.0
+
         viewModelScope.launch {
             try {
                 val cafeDoc = firestore.collection("Cafe").document(cafeId).get().await()
@@ -140,7 +155,10 @@ class MenuViewModel : ViewModel() {
                 firestore.collection("Cafe").document(cafeId).collection("menu")
                     .get()
                     .addOnSuccessListener { querySnapshot ->
-                        val items = querySnapshot.documents.map { MenuItem.fromFirestore(it) }
+                        val items = querySnapshot.documents.map { doc ->
+                            // When creating MenuItem from Firestore, pass the cafeId
+                            MenuItem.fromFirestore(doc).copy(cafeId = cafeId)
+                        }
                         _menuItems.value = items
                     }
                     .addOnFailureListener { e ->

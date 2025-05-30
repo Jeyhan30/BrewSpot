@@ -1,7 +1,5 @@
 package com.example.brewspot.view.menu
 
-
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.brewspot.R // Pastikan R diimpor dengan benar
+import com.example.brewspot.R
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -37,11 +36,25 @@ import java.util.Locale
 @Composable
 fun CartScreen(
     navController: NavController,
-    menuViewModel: MenuViewModel = viewModel() // Menggunakan ViewModel yang sama
+    menuViewModel: MenuViewModel = viewModel(),
+    cafeId: String? = null // MODIFIED: Accept nullable cafeId
 ) {
-    val cartItems by menuViewModel.cartItems.collectAsState()
-    val totalPrice by menuViewModel.totalPrice.collectAsState()
+    val allCartItems by menuViewModel.cartItems.collectAsState()
     val brownColor = Color(0xFF5D4037)
+
+    // MODIFIED: Filter cart items based on cafeId
+    val filteredCartItems = remember(allCartItems, cafeId) {
+        if (cafeId != null) {
+            allCartItems.filter { it.cafeId == cafeId }
+        } else {
+            allCartItems // If no cafeId is provided, show all items (e.g., if navigating from a different route)
+        }
+    }
+
+    // Calculate total price based on filtered items
+    val totalPriceForCafe = remember(filteredCartItems) {
+        filteredCartItems.sumOf { it.price * it.quantity }
+    }
 
     Scaffold(
         topBar = {
@@ -66,17 +79,25 @@ fun CartScreen(
                 modifier = Modifier.height(80.dp)
             ) {
                 Button(
-                    onClick = { menuViewModel.checkout() }, // Panggil checkout dari ViewModel
+                    onClick = {
+                        // MODIFIED: Pass cafeId to checkout()
+                        if (cafeId != null) {
+                            menuViewModel.checkout(cafeId)
+                        } else {
+                            // Handle case where cafeId is null (e.g., show a message or navigate back)
+                            println("Tidak dapat melakukan checkout: cafeId tidak tersedia.")
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = brownColor),
-                    enabled = cartItems.isNotEmpty() // Aktifkan tombol hanya jika keranjang tidak kosong
+                    enabled = filteredCartItems.isNotEmpty() // Enable button based on filtered items
                 ) {
                     Text(
-                        "Bayar Sekarang (${formatRupiah(totalPrice)})",
+                        "Bayar Sekarang (${formatRupiah(totalPriceForCafe)})", // Display filtered total
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
@@ -92,9 +113,9 @@ fun CartScreen(
                 .background(Color(0xFFF0F0F0))
                 .padding(16.dp)
         ) {
-            if (cartItems.isEmpty()) {
+            if (filteredCartItems.isEmpty()) { // Use filtered items
                 Text(
-                    "Keranjang Anda kosong. Mari tambahkan beberapa menu!",
+                    "Keranjang Anda kosong untuk kafe ini. Mari tambahkan beberapa menu!",
                     modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.CenterHorizontally)
                         .padding(vertical = 32.dp),
                     style = MaterialTheme.typography.bodyLarge,
@@ -106,7 +127,7 @@ fun CartScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    items(cartItems) { item ->
+                    items(filteredCartItems) { item -> // Use filtered items
                         CartItemDetailCard(
                             item = item,
                             onAddQuantity = { menuViewModel.addToCart(item) },
@@ -137,8 +158,8 @@ fun CartItemDetailCard(item: MenuItem, onAddQuantity: () -> Unit, onRemoveQuanti
         ) {
             val imagePainter = rememberAsyncImagePainter(
                 model = item.imageUrl,
-                placeholder = painterResource(id = R.drawable.coffee), // Default placeholder
-                error = painterResource(id = R.drawable.coffee) // Default error image
+                placeholder = painterResource(id = R.drawable.coffee),
+                error = painterResource(id = R.drawable.coffee)
             )
             Image(
                 painter = imagePainter,
@@ -168,6 +189,13 @@ fun CartItemDetailCard(item: MenuItem, onAddQuantity: () -> Unit, onRemoveQuanti
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // Display cafe name for each item
+                Text(
+                    text = "Kafe ID: ${item.cafeId}", // Now showing the cafe ID
+                    color = Color.DarkGray,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Subtotal: ${formatRupiah(item.price * item.quantity)}",
                     color = Color.Black,
@@ -181,7 +209,7 @@ fun CartItemDetailCard(item: MenuItem, onAddQuantity: () -> Unit, onRemoveQuanti
             ) {
                 IconButton(
                     onClick = onRemoveQuantity,
-                    enabled = item.quantity > 0 // Tombol minus dinonaktifkan jika quantity 0
+                    enabled = item.quantity > 0
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = "Kurangi")
                 }

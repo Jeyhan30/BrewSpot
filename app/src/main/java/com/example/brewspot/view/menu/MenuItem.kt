@@ -19,8 +19,8 @@ data class MenuItem(
                 name = doc.getString("name") ?: "",
                 description = doc.getString("deskripsi") ?: "",
                 price = doc.getDouble("harga") ?: 0.0,
-                imageUrl = doc.getString("gambar") ?: ""
-            )
+                imageUrl = doc.getString("gambar") ?: "",
+                cafeId = ""            )
         }
     }
 }
