@@ -36,6 +36,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.brewspot.view.cafe_detail.CafeDetailScreen
 import com.example.brewspot.view.cafe_detail.CafeDetailViewModel
+import com.example.brewspot.view.confirmation.ConfirmationPaymentScreen
+import com.example.brewspot.view.confirmation.ConfirmationViewModel
+import com.example.brewspot.view.voucher.VoucherScreen
 import java.net.URLDecoder // Import untuk URLDecoder
 
 @Composable
@@ -55,6 +58,7 @@ fun AppNavigation() {
     val profileViewModel: ProfileViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel() // <-- Correctly initialize HomeViewModel here
     val menuViewModel: MenuViewModel = viewModel() // Initialize MenuViewModel here
+    val confirmationViewModel: ConfirmationViewModel = viewModel() // ADD THIS LINE
 
 
     NavHost(navController = navController, startDestination = "login") {
@@ -102,20 +106,26 @@ fun AppNavigation() {
                 viewModel = cafeDetailViewModel
             )
         }
-        composable("menu/{cafeId}") { backStackEntry ->
+        composable("menu/{cafeId}?reservationId={reservationId}", arguments = listOf(
+            navArgument("cafeId") { type = NavType.StringType },
+            navArgument("reservationId") { type = NavType.StringType; nullable = true } //
+        )) { backStackEntry ->
             val cafeId = backStackEntry.arguments?.getString("cafeId") ?: "default"
+            val reservationId = backStackEntry.arguments?.getString("reservationId") //
             MenuScreen(
                 navController = navController,
                 cafeId = cafeId,
+                reservationId = reservationId, // Pass reservationId to MenuScreen
                 menuViewModel = menuViewModel
             )
         }
+
         // MODIFIED: cart_screen now accepts a nullable cafeId argument
         composable(
             route = "cart_screen?cafeId={cafeId}",
             arguments = listOf(navArgument("cafeId") {
                 type = NavType.StringType
-                nullable = true // Allow cafeId to be null if navigating to cart from other places
+                nullable = true
             })
         ) { backStackEntry ->
             val cafeId = backStackEntry.arguments?.getString("cafeId")
@@ -126,6 +136,33 @@ fun AppNavigation() {
             )
         }
 
+        // NEW: Route for Confirmation Payment Screen
+        composable(
+            "confirmation_payment?cafeId={cafeId}&reservationId={reservationId}", // REMOVED historyId
+            arguments = listOf(
+                navArgument("cafeId") { type = NavType.StringType },
+                navArgument("reservationId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val cafeId = backStackEntry.arguments?.getString("cafeId")
+            val reservationId = backStackEntry.arguments?.getString("reservationId")
+            if (cafeId != null && reservationId != null) {
+                ConfirmationPaymentScreen(
+                    navController = navController,
+                    cafeId = cafeId,
+                    reservationId = reservationId,
+                    viewModel = confirmationViewModel,
+                    menuViewModel = menuViewModel // Pass MenuViewModel explicitly if not done via Hilt
+                )
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Error: Data konfirmasi tidak lengkap.", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+        composable("voucherScreen") {
+            VoucherScreen(navController = navController)
+        }
 
 
 

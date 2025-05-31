@@ -45,6 +45,10 @@ import android.widget.Toast // For Toast messages
 import androidx.compose.ui.platform.LocalContext // For Toast messages
 
 import androidx.compose.material3.FabPosition // IMPORTANT: Add this import!
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 import com.example.brewspot.R // Make sure this points to your correct R file
 
@@ -133,10 +137,7 @@ fun LegendItem(color: Color, text: String) {
     }
 }
 
-// =============================================================================
-// Composable: TableLayoutScreen (Main Screen)
-// =============================================================================
-@OptIn(ExperimentalMaterial3Api::class) // For TopAppBarDefaults
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TableLayoutScreen(
     navController: NavController,
@@ -144,43 +145,53 @@ fun TableLayoutScreen(
     userName: String?,
     date: String?,
     time: String?,
-    totalGuests: Int, // Receive totalGuests here
+    totalGuests: Int,
     viewModel: TableViewModel = viewModel()
 ) {
-    val context = LocalContext.current // Get context for Toast messages
+    val context = LocalContext.current
+    val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current // Dapatkan LifecycleOwner
 
-    // Observe table state from ViewModel
     val tables by viewModel.tables.collectAsState()
-    // State for currently selected tables (now stored in ViewModel as a set)
     val selectedTables = viewModel.selectedTables
 
-    // Custom colors from image
-    val primaryBrown = Color(0xFF4E342E) // Dark brown for TopAppBar and buttons
-    val lighterGrey = Color(0xFFF0F0F0) // Light gray color for main background
+    val primaryBrown = Color(0xFF4E342E)
+    val lighterGrey = Color(0xFFF0F0F0)
 
-    // Scroll state for main Column
     val scrollState = rememberScrollState()
-
-    // State to control FAB visibility
     val fabVisible = remember { mutableStateOf(true) }
 
-    // Side effect to monitor scroll state
     LaunchedEffect(scrollState) {
-        snapshotFlow { scrollState.value } // Observe scroll position changes
+        snapshotFlow { scrollState.value }
             .collect { scrollPosition ->
                 if (scrollState.isScrollInProgress) {
-                    // If scrolling, hide FAB
                     if (fabVisible.value) fabVisible.value = false
                 } else {
-                    // If not scrolling, show FAB (after a short delay to ensure scrolling has truly stopped)
                     if (!fabVisible.value) fabVisible.value = true
                 }
             }
     }
 
-    // Pass reservation details to ViewModel
+    // Panggil setReservationDetails saat argumen berubah
     LaunchedEffect(cafeId, userName, date, time, totalGuests) {
         viewModel.setReservationDetails(cafeId, userName, date, time, totalGuests)
+        // refreshTableStatusIfCafeIdSet akan dipanggil di DisposableEffect saat ON_RESUME
+        // Atau secara eksplisit di sini jika memang ingin di-refresh saat argumen berubah,
+        // tapi DisposableEffect akan lebih baik untuk kasus resume layar.
+    }
+
+    // SOLUSI UTAMA: Menggunakan DisposableEffect dengan LifecycleObserver
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Saat layar resume (kembali dari layar lain seperti ConfirmationScreen)
+                viewModel.refreshTableStatusIfCafeIdSet()
+                println("TableLayoutScreen: ON_RESUME, refreshing table status.")
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     Scaffold(
@@ -215,53 +226,53 @@ fun TableLayoutScreen(
             val selectedTableCount = selectedTables.size
             val canProceed = selectedTableCount == totalGuests && totalGuests > 0
 
-            val fabContainerColor = if (canProceed) primaryBrown else primaryBrown.copy(alpha = 0.5f) // Dimmer when disabled
-            val fabContentColor = if (canProceed) Color.White else Color.White.copy(alpha = 0.7f) // Dimmer text when disabled
+            val fabContainerColor = if (canProceed) primaryBrown else primaryBrown.copy(alpha = 0.5f)
+            val fabContentColor = if (canProceed) Color.White else Color.White.copy(alpha = 0.7f)
 
-//            val onClickAction: (() -> Unit)? = if (canProceed) {
-//                {
-//                    viewModel.bookSelectedTables() // Book all selected tables
-//                    // Create reservation in Firestore
-//                    if (cafeId != null && userName != null && date != null && time != null) {
-//                        viewModel.createReservation(
-//                            cafeId = cafeId,
-//                            cafeName = viewModel.cafe?.name ?: "Unknown Cafe", // Get cafe name from ViewModel
-//                            userName = userName,
-//                            date = date,
-//                            totalGuests = totalGuests,
-//                            time = time,
-//                            onSuccess = {
-//                                Toast.makeText(context, "Reservasi berhasil!", Toast.LENGTH_SHORT).show()
-//                                navController.navigate("confirmation_screen") { // Navigate to confirmation screen or home
-//                                    popUpTo("home") { inclusive = false } // Pop up to home screen, not inclusive
-//                                    launchSingleTop = true
-//                                }
-//                            },
-//                            onFailure = { errorMessage ->
-//                                Toast.makeText(context, "Reservasi gagal: $errorMessage", Toast.LENGTH_LONG).show()
-//                            }
-//                        )
-//                    } else {
-//                        Toast.makeText(context, "Data reservasi tidak lengkap.", Toast.LENGTH_SHORT).show()
-//                    }
-//                }
-//            } else {
-//                null
-//            }
+            val onClickAction: (() -> Unit)? = if (canProceed) {
+                {
+                    if (cafeId != null && userName != null && date != null && time != null) {
+                        viewModel.createReservation(
+                            cafeId = cafeId,
+                            cafeName = viewModel.cafe?.name ?: "Unknown Cafe",
+                            userName = userName,
+                            date = date,
+                            totalGuests = totalGuests,
+                            time = time,
+                            onSuccess = { reservationId ->
+                                Toast.makeText(context, "Reservasi berhasil! Silakan pilih menu.", Toast.LENGTH_SHORT).show()
+                                navController.navigate("menu/${cafeId}?reservationId=${reservationId}") {
+                                    popUpTo("welcome") {
+                                        inclusive = false
+                                    }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onFailure = { errorMessage ->
+                                Toast.makeText(context, "Reservasi gagal: $errorMessage", Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    } else {
+                        Toast.makeText(context, "Data reservasi tidak lengkap.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                null
+            }
 
             AnimatedVisibility(
                 visible = fabVisible.value,
-                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(), // Slide from bottom & fade in
-                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(), // Slide to bottom & fade out
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             ) {
                 ExtendedFloatingActionButton(
                     onClick = onClickAction ?: {},
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    containerColor = fabContainerColor, // Apply dynamic color
+                    containerColor = fabContainerColor,
                     shape = RoundedCornerShape(8.dp),
-                    contentColor = fabContentColor // Apply dynamic content color
+                    contentColor = fabContentColor
                 ) {
                     Text("Selanjutnya (${selectedTableCount}/$totalGuests)", color = Color.White, fontSize = 18.sp)
                 }
@@ -269,7 +280,6 @@ fun TableLayoutScreen(
         },
         floatingActionButtonPosition = FabPosition.Center
     ) { paddingValues ->
-        // Main screen content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -277,38 +287,7 @@ fun TableLayoutScreen(
                 .padding(top = paddingValues.calculateTopPadding())
                 .verticalScroll(scrollState)
         ) {
-            // CustomTopShape as a curved background below the TopAppBar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .offset(y = (-1).dp)
-                    .clip(CustomTopShape())
-                    .background(primaryBrown)
-            ) {
-                // This Box itself doesn't contain content visible in the image, it's just the shape.
-            }
-
-            // --- Start of "Pilih Meja" section ---
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(lighterGrey) // Ensure it has its own background
-                    .padding(horizontal = 16.dp) // Add horizontal padding to this section
-            ) {
-                Text(
-                    "Pilih Meja",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.Black
-                )
-                Text(
-                    "Klik kotak putih untuk memilih meja Anda!",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(16.dp)) // Spacer after the text
-            }
-            // --- End of "Pilih Meja" section ---
+            // ... (rest of the Column content, CustomTopShape, Pilih Meja section, etc.) ...
 
             // Area for the cafe layout image (as background visual only)
             Box(
@@ -319,19 +298,17 @@ fun TableLayoutScreen(
                     .background(Color(0xFFF5F5DC), RoundedCornerShape(16.dp))
                     .clipToBounds()
             ) {
-                // Cafe layout image as background
                 Image(
-                    painter = painterResource(id = R.drawable.cafeeee), // <-- Replace with your file name!
+                    painter = painterResource(id = R.drawable.cafeeee),
                     contentDescription = "Denah Cafe",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop // Adjust ContentScale if needed
+                    contentScale = ContentScale.Crop
                 )
 
-                // "AREA LUAR" text on top of the layout image
                 Text("AREA LUAR",
                     modifier = Modifier
-                        .align(Alignment.TopEnd) // Position at top-right of the Box
-                        .offset(x = (-16).dp, y = 16.dp), // Adjust offset from top-right
+                        .align(Alignment.TopEnd)
+                        .offset(x = (-16).dp, y = 16.dp),
                     color = Color.Gray,
                     fontSize = 12.sp
                 )
@@ -380,7 +357,6 @@ fun TableLayoutScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Filter out special "tables" that aren't actual seating tables
                 val filteredAndSortedTables = tables.entries
                     .filter { (id, _) -> id != "PHOTO BOOTH" && id != "KASIR" && id != "TEMPAT PARKIR" }
                     .sortedBy { it.key.replace("T", "").toIntOrNull() ?: Int.MAX_VALUE }
@@ -389,17 +365,16 @@ fun TableLayoutScreen(
                     TableItem(
                         tableId = id,
                         isBooked = isBooked,
-                        isSelected = viewModel.selectedTables.contains(id), // Check if table is in the set of selected tables
+                        isSelected = viewModel.selectedTables.contains(id),
                         onClick = {
                             if (!isBooked) {
-                                viewModel.toggleTableSelection(id, totalGuests) // Pass totalGuests to toggle logic
+                                viewModel.toggleTableSelection(id, totalGuests)
                             }
                         }
                     )
                 }
             }
-            // Add spacer at the very bottom so content is not cut off by FAB
-            Spacer(modifier = Modifier.height(80.dp)) // Spacer height roughly FAB height + padding
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }

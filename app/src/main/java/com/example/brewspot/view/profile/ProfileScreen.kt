@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
@@ -43,7 +44,8 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.brewspot.R
 import com.example.brewspot.view.home.BottomNavigationBar // Assuming BottomNavigationBar is in home package
-
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 // Custom shape for the top brown background, similar to HomeScreen but adapted for Profile
 class ProfileTopShape : Shape {
     override fun createOutline(
@@ -91,9 +93,17 @@ fun ProfileScreen(
     navController: NavController,
     profileViewModel: ProfileViewModel = viewModel() // Inject ViewModel
 ) {
-    LaunchedEffect(Unit) { // 'Unit' berarti efek ini hanya berjalan sekali saat composable pertama kali masuk komposisi
-        // Ini memastikan data di-refresh setiap kali layar profil ditampilkan
-        // (asumsi ViewModel mungkin sudah ada dari sesi sebelumnya yang belum dihancurkan)
+    val context = LocalContext.current // Dapatkan konteks di sini
+
+    val googleSignInClient = remember { // Inisialisasi GoogleSignInClient
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("46336032851-psnppj5vbnt7oq5ri5c7qn0u7q4knoj9.apps.googleusercontent.com") // Gunakan ID proyek Anda yang sebenarnya
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
+
+    LaunchedEffect(Unit) {
         profileViewModel.refreshUserProfile()
     }
     val brownColor = Color(0xFF5D4037) // Dark brown color
@@ -220,19 +230,32 @@ fun ProfileScreen(
     }
     if (showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = { showLogoutDialog = false }, // Dismiss when clicking outside or pressing back
+            onDismissRequest = { showLogoutDialog = false },
             title = { Text("Konfirmasi Logout") },
             text = { Text("Apakah Anda yakin ingin logout?") },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        profileViewModel.logout() // Call logout function from ViewModel
-                        navController.navigate("login") { // Navigate back to login screen after logout
-                            popUpTo("login") { // Clear back stack up to login
+                        // Lakukan Sign Out dari Firebase
+                        profileViewModel.logout()
+
+                        // Lakukan Sign Out dari GoogleSignInClient
+                        googleSignInClient.signOut().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                println("GoogleSignInClient signed out successfully.")
+                            } else {
+                                println("Failed to sign out from GoogleSignInClient: ${task.exception?.message}")
+                            }
+                        }
+
+                        // Navigasi ke layar login
+                        navController.navigate("login") {
+                            // Hapus semua dari back stack hingga layar login
+                            popUpTo("login") {
                                 inclusive = true
                             }
                         }
-                        showLogoutDialog = false // Dismiss dialog
+                        showLogoutDialog = false
                     }
                 ) {
                     Text("Logout", color = brownColor)
@@ -240,12 +263,12 @@ fun ProfileScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showLogoutDialog = false } // Dismiss dialog
+                    onClick = { showLogoutDialog = false }
                 ) {
                     Text("Batal", color = Color.Gray)
                 }
             },
-            containerColor = Color.White, // Background of the dialog
+            containerColor = Color.White,
             titleContentColor = Color.Black,
             textContentColor = Color.DarkGray
         )

@@ -8,38 +8,46 @@ import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import com.example.brewspot.view.home.Cafe // Import Cafe model if you want to store cafe details
+import com.example.brewspot.view.home.Cafe
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.tasks.await
 
 class TableViewModel : ViewModel() {
-    private val db = Firebase.firestore // Correctly initialized as 'db'
-    private val auth = FirebaseAuth.getInstance() // Initialize FirebaseAuth
+    private val db = Firebase.firestore
+    private val auth = FirebaseAuth.getInstance()
     private val _tables = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val tables: StateFlow<Map<String, Boolean>> = _tables
 
-    // Use a MutableSet for selected tables
     var selectedTables: MutableSet<String> by mutableStateOf(mutableSetOf())
 
-    // Store reservation details
-    // cafeId sudah ada di sini, kita akan menggunakannya
-    var cafeId: String? by mutableStateOf(null) // Pastikan ini tetap ada
+    var cafeId: String? by mutableStateOf(null)
     var userName: String? by mutableStateOf(null)
     var date: String? by mutableStateOf(null)
     var time: String? by mutableStateOf(null)
     var totalGuests: Int by mutableStateOf(0)
+    // lastReservationDetails tidak lagi diperlukan dengan pendekatan reset unconditional
+    // private var lastReservationDetails: Triple<String?, String?, Int>? = null
 
-    // You might want to fetch cafe details here to get the name for reservation
     var cafe: Cafe? by mutableStateOf(null)
 
-    // Inisialisasi tidak lagi memanggil observeTables() secara langsung
-    // karena cafeId belum tersedia saat init.
-    // observeTables() akan dipanggil setelah cafeId diset via setReservationDetails.
+    private var snapshotListener: ListenerRegistration? = null
 
-    // New function to set reservation details from CafeDetailScreen
+    private val _resetTableStateTrigger = MutableSharedFlow<Unit>()
+    val resetTableStateTrigger: SharedFlow<Unit> = _resetTableStateTrigger.asSharedFlow()
+
+    fun triggerResetTableState() {
+        viewModelScope.launch {
+            _resetTableStateTrigger.emit(Unit)
+        }
+    }
+
     fun setReservationDetails(
         cafeId: String?,
         userName: String?,
@@ -47,34 +55,36 @@ class TableViewModel : ViewModel() {
         time: String?,
         totalGuests: Int
     ) {
-        // Hanya perbarui jika cafeId berubah atau jika ini adalah inisialisasi pertama
-        if (this.cafeId != cafeId) {
-            this.cafeId = cafeId
-            // Panggil observeTables hanya jika cafeId valid
-            cafeId?.let { id ->
-                observeTables(id) // Panggil observeTables dengan cafeId
-                viewModelScope.launch {
-                    try {
-                        val documentSnapshot = db.collection("Cafe").document(id).get().await()
-                        if (documentSnapshot.exists()) {
-                            cafe = Cafe.fromFirestore(documentSnapshot)
-                        }
-                    } catch (e: Exception) {
-                        println("Error fetching cafe details: ${e.message}")
-                    }
-                }
-            }
-        }
+        // UNCONDITIONAL RESET AND REFRESH:
+        // Setiap kali fungsi ini dipanggil, kita asumsikan ini adalah awal dari
+        // proses pemilihan meja baru untuk sebuah reservasi.
+        selectedTables = mutableSetOf() // <-- RESET TANPA SYARAT UNTUK PILIHAN LOKAL
+
+        this.cafeId = cafeId
         this.userName = userName
         this.date = date
         this.time = time
         this.totalGuests = totalGuests
+
+        cafeId?.let { id ->
+            observeTables(id) // Refresh data meja dari Firestore
+            viewModelScope.launch {
+                try {
+                    val documentSnapshot = db.collection("Cafe").document(id).get().await()
+                    if (documentSnapshot.exists()) {
+                        cafe = Cafe.fromFirestore(documentSnapshot)
+                    }
+                } catch (e: Exception) {
+                    println("Error fetching cafe details: ${e.message}")
+                }
+            }
+        }
     }
 
-
-    // Fungsi observeTables sekarang menerima cafeId
     private fun observeTables(currentCafeId: String) {
-        db.collection("Cafe").document(currentCafeId).collection("Table") // Gunakan currentCafeId di sini
+        snapshotListener?.remove()
+
+        snapshotListener = db.collection("Cafe").document(currentCafeId).collection("Table")
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
                     println("Firestore Error: ${error.message}")
@@ -91,36 +101,44 @@ class TableViewModel : ViewModel() {
             }
     }
 
+    fun refreshTableStatusIfCafeIdSet() {
+        cafeId?.let { id ->
+            observeTables(id)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        snapshotListener?.remove()
+    }
+
     fun toggleTableSelection(tableId: String, maxSelections: Int) {
-        // Ensure the table is not already booked
         if (_tables.value[tableId] == true) {
-            return // Cannot select a booked table
+            return
         }
 
         val currentSelection = selectedTables.toMutableSet()
         if (currentSelection.contains(tableId)) {
             currentSelection.remove(tableId)
         } else {
-            if (currentSelection.size < maxSelections) { // Only add if not exceeding max
+            if (currentSelection.size < maxSelections) {
                 currentSelection.add(tableId)
             } else {
-                // Optionally, inform the user they cannot select more tables
                 println("Cannot select more than $maxSelections tables.")
             }
         }
         selectedTables = currentSelection
     }
 
-    // Function to book all selected tables
     fun bookSelectedTables() {
-        val currentCafeId = cafeId // Ambil cafeId dari state ViewModel
+        val currentCafeId = cafeId
         if (currentCafeId == null) {
             println("Error: cafeId is null, cannot book tables.")
             return
         }
 
         selectedTables.forEach { tableId ->
-            db.collection("Cafe").document(currentCafeId) // Gunakan currentCafeId di sini
+            db.collection("Cafe").document(currentCafeId)
                 .collection("Table").document(tableId)
                 .update("Book", true)
                 .addOnSuccessListener {
@@ -130,38 +148,36 @@ class TableViewModel : ViewModel() {
                     println("Error booking meja $tableId di cafe $currentCafeId: ${e.message}")
                 }
         }
-        // Clear selected tables after booking
         selectedTables = mutableSetOf()
     }
 
-    // New function to create the reservation document
     fun createReservation(
-        cafeId: String, // Parameter cafeId sudah ada, pastikan ini yang digunakan
+        cafeId: String,
         cafeName: String,
         userName: String,
         date: String,
         totalGuests: Int,
         time: String,
-        onSuccess: () -> Unit,
+        onSuccess: (String) -> Unit,
         onFailure: (String) -> Unit
     ) {
         val reservationData = hashMapOf(
-            "cafeId" to cafeId, // Gunakan cafeId yang diterima
+            "cafeId" to cafeId,
             "cafeName" to cafeName,
             "userId" to auth.currentUser?.uid,
             "userName" to userName,
             "date" to date,
             "totalGuests" to totalGuests,
             "time" to time,
-            "selectedTables" to selectedTables.toList(), // Save the list of selected table IDs
+            "selectedTables" to selectedTables.toList(),
             "timestamp" to FieldValue.serverTimestamp()
         )
 
-        db.collection("reservations") // Ubah 'firestore' menjadi 'db' di sini
+        db.collection("reservations")
             .add(reservationData)
-            .addOnSuccessListener {
+            .addOnSuccessListener { documentReference ->
                 println("Reservation created successfully for $cafeName on $date at $time with tables: $selectedTables")
-                onSuccess()
+                onSuccess(documentReference.id)
             }
             .addOnFailureListener { e ->
                 println("Error creating reservation: ${e.message}")

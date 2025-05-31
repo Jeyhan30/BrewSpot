@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -31,30 +32,32 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.brewspot.R
 import java.text.NumberFormat
 import java.util.Locale
+import androidx.compose.runtime.remember // ADD THIS IMPORT
+import androidx.compose.runtime.DisposableEffect // ADD THIS IMPORT
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
     navController: NavController,
     menuViewModel: MenuViewModel = viewModel(),
-    cafeId: String? = null // MODIFIED: Accept nullable cafeId
+    cafeId: String? = null
 ) {
     val allCartItems by menuViewModel.cartItems.collectAsState()
     val brownColor = Color(0xFF5D4037)
 
-    // MODIFIED: Filter cart items based on cafeId
     val filteredCartItems = remember(allCartItems, cafeId) {
         if (cafeId != null) {
             allCartItems.filter { it.cafeId == cafeId }
         } else {
-            allCartItems // If no cafeId is provided, show all items (e.g., if navigating from a different route)
+            allCartItems
         }
     }
 
-    // Calculate total price based on filtered items
     val totalPriceForCafe = remember(filteredCartItems) {
         filteredCartItems.sumOf { it.price * it.quantity }
     }
+
+
 
     Scaffold(
         topBar = {
@@ -80,12 +83,18 @@ fun CartScreen(
             ) {
                 Button(
                     onClick = {
-                        // MODIFIED: Pass cafeId to checkout()
-                        if (cafeId != null) {
-                            menuViewModel.checkout(cafeId)
+                        // NEW: Navigasi ke ConfirmationPaymentScreen dan teruskan item menu
+                        // Perlu mendapatkan reservationId dari MenuViewModel atau argumen
+                        val currentReservationId = menuViewModel.getCurrentReservationId() // Anda perlu membuat fungsi ini di MenuViewModel
+                        if (cafeId != null && currentReservationId != null && filteredCartItems.isNotEmpty()) {
+                            // Mengonversi daftar MenuItem menjadi string JSON untuk diteruskan
+                            // Atau, lebih baik, menggunakan objek yang bisa di-parcelable/serializable
+                            // Untuk kesederhanaan, mari kita pertahankan filteredCartItems di MenuViewModel.
+                            // Konfirmasi PaymentScreen akan mengambil dari MenuViewModel juga.
+                            navController.navigate("confirmation_payment?cafeId=${cafeId}&reservationId=${currentReservationId}")
                         } else {
-                            // Handle case where cafeId is null (e.g., show a message or navigate back)
-                            println("Tidak dapat melakukan checkout: cafeId tidak tersedia.")
+                            // Tampilkan toast jika ada yang kurang
+                            // Anda bisa menambahkan Toast.makeText(LocalContext.current, "Pilih item atau lengkapi reservasi", Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier

@@ -56,6 +56,7 @@ fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
 fun MenuScreen(
     navController: NavController,
     cafeId: String,
+    reservationId: String?,
     menuViewModel: MenuViewModel
 ) {
     val cafeDetails by menuViewModel.cafeDetails.collectAsState()
@@ -69,6 +70,11 @@ fun MenuScreen(
 
     LaunchedEffect(cafeId) {
         menuViewModel.fetchCafeAndMenuItems(cafeId)
+    }
+    LaunchedEffect(reservationId) {
+        if (reservationId != null) {
+            menuViewModel.setReservationId(reservationId) // NEW: Set reservationId in ViewModel
+        }
     }
 
     Scaffold(
