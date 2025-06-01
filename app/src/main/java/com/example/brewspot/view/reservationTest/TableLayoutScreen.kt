@@ -49,8 +49,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil.compose.rememberAsyncImagePainter
 
 import com.example.brewspot.R // Make sure this points to your correct R file
+import com.example.brewspot.view.cafe_detail.loadImageModel
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 // Custom shape for the top brown background (now starting from top and curving down)
 class CustomTopShape : Shape {
@@ -153,6 +156,7 @@ fun TableLayoutScreen(
 
     val tables by viewModel.tables.collectAsState()
     val selectedTables = viewModel.selectedTables
+    val cafe by viewModel.cafe.collectAsState() // Ini mengumpulkan state Cafe dari ViewModel
 
     val primaryBrown = Color(0xFF4E342E)
     val lighterGrey = Color(0xFFF0F0F0)
@@ -161,15 +165,18 @@ fun TableLayoutScreen(
     val fabVisible = remember { mutableStateOf(true) }
 
     LaunchedEffect(scrollState) {
-        snapshotFlow { scrollState.value }
-            .collect { scrollPosition ->
-                if (scrollState.isScrollInProgress) {
-                    if (fabVisible.value) fabVisible.value = false
+        snapshotFlow { scrollState.isScrollInProgress } // Amati isScrollInProgress
+            .distinctUntilChanged() // Hanya bereaksi jika nilai berubah (true -> false atau false -> true)
+            .collect { isScrolling ->
+                if (isScrolling) {
+                    fabVisible.value = false // Sembunyikan saat sedang menggulir
                 } else {
-                    if (!fabVisible.value) fabVisible.value = true
+                    // Ketika guliran berhenti, tampilkan FAB
+                    fabVisible.value = true
                 }
             }
     }
+
 
     // Panggil setReservationDetails saat argumen berubah
     LaunchedEffect(cafeId, userName, date, time, totalGuests) {
@@ -224,7 +231,7 @@ fun TableLayoutScreen(
         },
         floatingActionButton = {
             val selectedTableCount = selectedTables.size
-            val canProceed = selectedTableCount == totalGuests && totalGuests > 0
+            val canProceed = selectedTableCount > 0
 
             val fabContainerColor = if (canProceed) primaryBrown else primaryBrown.copy(alpha = 0.5f)
             val fabContentColor = if (canProceed) Color.White else Color.White.copy(alpha = 0.7f)
@@ -234,7 +241,7 @@ fun TableLayoutScreen(
                     if (cafeId != null && userName != null && date != null && time != null) {
                         viewModel.createReservation(
                             cafeId = cafeId,
-                            cafeName = viewModel.cafe?.name ?: "Unknown Cafe",
+                            cafeName = cafe?.name ?: "Unknown Cafe", // PERBAIKAN DI SINI: Gunakan 'cafe?.name'
                             userName = userName,
                             date = date,
                             totalGuests = totalGuests,
@@ -274,7 +281,7 @@ fun TableLayoutScreen(
                     shape = RoundedCornerShape(8.dp),
                     contentColor = fabContentColor
                 ) {
-                    Text("Selanjutnya (${selectedTableCount}/$totalGuests)", color = Color.White, fontSize = 18.sp)
+                    Text("Selanjutnya (${selectedTableCount} Meja Dipilih)", color = Color.White, fontSize = 18.sp)
                 }
             }
         },
@@ -287,8 +294,6 @@ fun TableLayoutScreen(
                 .padding(top = paddingValues.calculateTopPadding())
                 .verticalScroll(scrollState)
         ) {
-            // ... (rest of the Column content, CustomTopShape, Pilih Meja section, etc.) ...
-
             // Area for the cafe layout image (as background visual only)
             Box(
                 modifier = Modifier
@@ -298,20 +303,20 @@ fun TableLayoutScreen(
                     .background(Color(0xFFF5F5DC), RoundedCornerShape(16.dp))
                     .clipToBounds()
             ) {
+                val denahImageModel = remember(cafe?.denahImage) { loadImageModel(cafe?.denahImage) }
+                val denahPainter = rememberAsyncImagePainter(
+                    model = denahImageModel,
+                    placeholder = painterResource(id = R.drawable.cafeeee), // Default placeholder
+                    error = painterResource(id = R.drawable.cafeeee) // Error placeholder
+                )
+
                 Image(
-                    painter = painterResource(id = R.drawable.cafeeee),
+                    painter = denahPainter, // Use the painter with the denah image
                     contentDescription = "Denah Cafe",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
 
-                Text("AREA LUAR",
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = (-16).dp, y = 16.dp),
-                    color = Color.Gray,
-                    fontSize = 12.sp
-                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -368,7 +373,7 @@ fun TableLayoutScreen(
                         isSelected = viewModel.selectedTables.contains(id),
                         onClick = {
                             if (!isBooked) {
-                                viewModel.toggleTableSelection(id, totalGuests)
+                                viewModel.toggleTableSelection(id)
                             }
                         }
                     )

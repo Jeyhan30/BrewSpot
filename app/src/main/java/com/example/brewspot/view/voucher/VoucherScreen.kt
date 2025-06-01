@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.brewspot.R
+import com.example.brewspot.view.confirmation.ConfirmationViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -49,7 +50,9 @@ fun formatRibuan(amount: Double): String {
 @Composable
 fun VoucherScreen(
     navController: NavController,
-    voucherViewModel: VoucherViewModel = viewModel() // Inject ViewModel
+    voucherViewModel: VoucherViewModel = viewModel(),
+    confirmationViewModel: ConfirmationViewModel = viewModel() // ADD THIS LINE
+// Inject ViewModel
 ) {
     val vouchers by voucherViewModel.vouchers.collectAsState()
     val selectedVoucher by voucherViewModel.selectedVoucher.collectAsState()
@@ -110,7 +113,7 @@ fun VoucherScreen(
                             isSelected = voucher == selectedVoucher,
                             onSelect = { voucherViewModel.selectVoucher(voucher) },
                             onUse = {
-                                voucherViewModel.selectVoucher(voucher) // Pilih voucher saat "Pakai" diklik
+                                confirmationViewModel.applyVoucher(voucher) // Gunakan voucher melalui ConfirmationViewModel
                                 navController.popBackStack() // Kembali ke layar sebelumnya
                             }
                         )

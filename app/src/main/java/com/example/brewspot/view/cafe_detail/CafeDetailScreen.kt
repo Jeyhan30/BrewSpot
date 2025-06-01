@@ -357,7 +357,8 @@ fun CafeDetailScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
                         value = userName,
-                        onValueChange = { userName = it },
+                        onValueChange = { /* Make this field read-only */ }, // MODIFIED: Remove onValueChange
+                        readOnly = true, // MODIFIED: Explicitly set as read-only
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(

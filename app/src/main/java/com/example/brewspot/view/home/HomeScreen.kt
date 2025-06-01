@@ -45,20 +45,15 @@ class CustomTopShape : Shape {
         val width = size.width
         val height = size.height
 
-        // Define the points for the curve
-        // The curve starts at a certain percentage down the left side,
-        // goes down, and then comes back up to the same percentage on the right side.
-        // The control point will be below these start/end points.
+        val curveStartEndY = height * 0.8f
+        val curveControlY = height * 1.2f
 
-        val curveStartEndY = height * 0.8f // Start and end the curve at 75% of the height
-        val curveControlY = height * 1.2f // The control point reaches the full height (or slightly beyond if you want a deeper dip)
-
-        moveTo(0f, 0f) // Start at top-left
-        lineTo(width, 0f) // Line to top-right
-        lineTo(width, curveStartEndY) // Line down to the right start point of the curve
+        moveTo(0f, 0f)
+        lineTo(width, 0f)
+        lineTo(width, curveStartEndY)
         quadraticBezierTo(
-            width / 2, curveControlY, // Control point for the dip (center-bottom of the shape)
-            0f, curveStartEndY // End point at the left side, mirroring the right start point
+            width / 2, curveControlY,
+            0f, curveStartEndY
         )
         close()
     })
@@ -69,17 +64,15 @@ fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
     if (base64Str.isNullOrEmpty()) {
         return null
     }
-    // Check if the string contains the "data:image" prefix
     val cleanBase64Str = if (base64Str.startsWith("data:image", ignoreCase = true)) {
-        base64Str.substringAfter(",") // Extract the actual Base64 data after the comma
+        base64Str.substringAfter(",")
     } else {
-        base64Str // If no prefix, use the string as is
+        base64Str
     }
     return try {
         val decodedBytes = Base64.decode(cleanBase64Str, Base64.DEFAULT)
         BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
     } catch (e: IllegalArgumentException) {
-        // Log the error for debugging purposes
         e.printStackTrace()
         null
     }
@@ -93,6 +86,8 @@ fun HomeScreen(
 ) {
     val recommendedCafes by viewModel.recommendedCafes.collectAsState()
     val popularCafes by viewModel.popularCafes.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState() // Observe the search query
+    val searchResults by viewModel.searchResults.collectAsState() // Observe search results
 
     val brownColor = Color(0xFF5D4037)
 
@@ -112,11 +107,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // Adjust height to accommodate the curve
-                    // If your curve goes slightly below the original height,
-                    // you need to increase this height.
-                    // Let's try 280.dp to give some room for the dip if needed.
-                    .height(280.dp) // Slightly increased height to ensure curve is visible
+                    .height(280.dp)
                     .clip(CustomTopShape())
                     .background(brownColor)
             ) {
@@ -137,22 +128,10 @@ fun HomeScreen(
                             modifier = Modifier.clickable { /* TODO: Lokasi picker */ }
                         ) {
                             Text(
-                                "Pilih Lokasi",
-                                color = Color.White.copy(alpha = 0.7f),
-                                fontSize = 14.sp
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
                                 "Kota Malang",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
-                            )
-                            Icon(
-                                painter = painterResource(id = R.drawable.down),
-                                contentDescription = "Pilih Lokasi",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
                             )
                         }
                         IconButton(onClick = { /* TODO: Notifikasi */ }) {
@@ -181,9 +160,10 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Updated OutlinedTextField for search functionality
                     OutlinedTextField(
-                        value = "",
-                        onValueChange = { /* TODO: Update search query */ },
+                        value = searchQuery, // Bind to the searchQuery state
+                        onValueChange = { viewModel.updateSearchQuery(it) }, // Update ViewModel on change
                         placeholder = { Text("Cari", color = Color.Gray) },
                         leadingIcon = {
                             Icon(
@@ -212,63 +192,82 @@ fun HomeScreen(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Categories Section
-            Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
-                Text(
-                    "Kategori",
-                    color = Color.Black,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CategoryButton("Terdekat") {}
-                    CategoryButton("Estetik") {}
-                    CategoryButton("Murah") {}
-                }
-            }
-
-            // Rekomendasi Kafe Section (Horizontal)
-            Column(modifier = Modifier.padding(bottom = 20.dp)) {
-                Text(
-                    "Rekomendasi Kafe",
-                    color = Color.Black,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 24.dp)
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(recommendedCafes) { cafe ->
-                        CafeCardHorizontal(cafe = cafe) {
-                            navController.navigate("cafeDetail/${cafe.id}")
-
+            // Display search results if query is not empty, otherwise display recommended cafes
+            if (searchQuery.isNotBlank()) {
+                Column(modifier = Modifier.padding(bottom = 20.dp)) {
+                    Text(
+                        "Hasil Pencarian",
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    if (searchResults.isEmpty()) {
+                        Text(
+                            "Tidak ada kafe yang ditemukan.",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                    } else {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 24.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(searchResults) { cafe ->
+                                CafeCardHorizontal(cafe = cafe) {
+                                    navController.navigate("cafeDetail/${cafe.id}")
+                                }
+                            }
                         }
                     }
                 }
-            }
+            } else {
+                // Rekomendasi Kafe Section (Horizontal)
+                Column(modifier = Modifier.padding(bottom = 20.dp)) {
+                    Text(
+                        "Rekomendasi Kafe",
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(recommendedCafes) { cafe ->
+                            CafeCardHorizontal(cafe = cafe) {
+                                navController.navigate("cafeDetail/${cafe.id}")
 
-// Kafe Paling Populer Section (Vertical)
-            Column(modifier = Modifier.padding(bottom = 20.dp)) {
-                Text(
-                    "Kafe Paling Populer",
-                    color = Color.Black,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 24.dp) // Apply horizontal padding to the title
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                LazyRow( // THIS IS THE KEY CHANGE for side-by-side arrangement
-                    contentPadding = PaddingValues(horizontal = 24.dp), // Padding around the entire row of items
-                    horizontalArrangement = Arrangement.spacedBy(12.dp) // Spacing BETWEEN each cafe card
-                ) {
-                    items(popularCafes) { cafe ->
-                        CafeCardVertical(cafe = cafe) { // Your individual card composable
-                            navController.navigate("cafeDetail/${cafe.id}")                        }
+                            }
+                        }
+                    }
+                }
+
+                // Kafe Paling Populer Section (Vertical)
+                Column(modifier = Modifier.padding(bottom = 20.dp)) {
+                    Text(
+                        "Kafe Paling Populer",
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(popularCafes) { cafe ->
+                            CafeCardVertical(cafe = cafe) {
+                                navController.navigate("cafeDetail/${cafe.id}")
+                            }
+                        }
                     }
                 }
             }
@@ -287,17 +286,16 @@ fun CategoryButton(text: String, onClick: () -> Unit) {
     ) {
         Text(text, color = Color.White, fontSize = 14.sp)
     }
-}// Tambahkan ini di bagian bawah kode setelah CafeCardHorizontal dan CategoryButton
+}
+
 @Composable
 fun CafeCardHorizontal(cafe: Cafe, onClick: () -> Unit) {
     val imageModel: Any = remember(cafe.image) {
         if (cafe.image.isNullOrEmpty()) {
-            R.drawable.cafeeee // Jika string gambar kosong, gunakan placeholder
+            R.drawable.cafeeee
         } else if (cafe.image.startsWith("http://") || cafe.image.startsWith("https://")) {
-            cafe.image // Jika ini adalah URL, biarkan Coil menanganinya langsung sebagai String
+            cafe.image
         } else {
-            // Jika bukan URL dan tidak kosong, anggap itu Base64 (dengan atau tanpa prefix)
-            // dan dekode menjadi Bitmap. Gunakan R.drawable.cafeeee sebagai fallback jika decode gagal.
             decodeBase64ToBitmap(cafe.image) ?: R.drawable.cafeeee
         }
     }
@@ -324,17 +322,16 @@ fun CafeCardHorizontal(cafe: Cafe, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
-            // Modified: Directly place text at the bottom
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomStart)
-                    .padding(horizontal = 12.dp, vertical = 12.dp) // Adjusted padding
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
             ) {
                 Text(
                     text = cafe.name,
                     color = Color.White,
-                    fontSize = 18.sp, // Adjusted font size slightly
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -343,24 +340,23 @@ fun CafeCardHorizontal(cafe: Cafe, onClick: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun CafeCardVertical(cafe: Cafe, onClick: () -> Unit) {
     val imageModel: Any = remember(cafe.image) {
         if (cafe.image.isNullOrEmpty()) {
-            R.drawable.cafeeee // Jika string gambar kosong, gunakan placeholder
+            R.drawable.cafeeee
         } else if (cafe.image.startsWith("http://") || cafe.image.startsWith("https://")) {
-            cafe.image // Jika ini adalah URL, biarkan Coil menanganinya langsung sebagai String
+            cafe.image
         } else {
-            // Jika bukan URL dan tidak kosong, anggap itu Base64 (dengan atau tanpa prefix)
-            // dan dekode menjadi Bitmap. Gunakan R.drawable.cafeeee sebagai fallback jika decode gagal.
             decodeBase64ToBitmap(cafe.image) ?: R.drawable.cafeeee
         }
     }
 
     Card(
         modifier = Modifier
-            .width(160.dp) // This sets the width of each individual card
-            .height(300.dp) // This sets the height of each individual card
+            .width(160.dp)
+            .height(300.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -383,23 +379,21 @@ fun CafeCardVertical(cafe: Cafe, onClick: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomStart)
-                    .padding(horizontal = 12.dp, vertical = 12.dp) // Adjusted padding
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
             ) {
                 Text(
                     text = cafe.name,
                     color = Color.White,
-                    fontSize = 18.sp, // Adjusted font size slightly
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-
-
-                    )
+                )
             }
-
         }
     }
 }
+
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -412,23 +406,18 @@ fun BottomNavigationBar(navController: NavController) {
             .height(90.dp)
     ) {
         val iconModifier = Modifier.size(20.dp)
-        val selectedColor = Color(0xFF5D4037) // Dark brown for selected items
-        val unselectedColor = Color.Gray // Gray for unselected items
+        val selectedColor = Color(0xFF5D4037)
+        val unselectedColor = Color.Gray
 
-        // Home/Beranda
         NavigationBarItem(
-            selected = currentRoute == "welcome", // Check if current route is "welcome"
+            selected = currentRoute == "welcome",
             onClick = {
-                if (currentRoute != "welcome") { // Avoid re-navigating if already on the same screen
+                if (currentRoute != "welcome") {
                     navController.navigate("welcome") {
-                        // Pop up to the start destination of the graph to avoid building up a large stack of destinations
-                        // on the back stack as users select items
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true
                         }
-                        // Avoid multiple copies of the same destination when reselecting the same item
                         launchSingleTop = true
-                        // Restore state when reselecting a previously selected item
                         restoreState = true
                     }
                 }
@@ -440,19 +429,18 @@ fun BottomNavigationBar(navController: NavController) {
                     modifier = iconModifier
                 )
             },
-            label = { Text("Beranda") }, // Add text label
+            label = { Text("Beranda") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = selectedColor,
                 selectedTextColor = selectedColor,
                 unselectedIconColor = unselectedColor,
                 unselectedTextColor = unselectedColor,
-                indicatorColor = Color.Transparent // As per image, no explicit indicator
+                indicatorColor = Color.Transparent
             )
         )
 
-        // History/Riwayat
         NavigationBarItem(
-            selected = currentRoute == "history", // Check if current route is "history"
+            selected = currentRoute == "history",
             onClick = {
                 if (currentRoute != "history") {
                     navController.navigate("history") {
@@ -471,7 +459,7 @@ fun BottomNavigationBar(navController: NavController) {
                     modifier = iconModifier
                 )
             },
-            label = { Text("Riwayat") }, // Add text label
+            label = { Text("Riwayat") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = selectedColor,
                 selectedTextColor = selectedColor,
@@ -481,9 +469,8 @@ fun BottomNavigationBar(navController: NavController) {
             )
         )
 
-        // Profile/Profil
         NavigationBarItem(
-            selected = currentRoute == "profile", // Check if current route is "profile"
+            selected = currentRoute == "profile",
             onClick = {
                 if (currentRoute != "profile") {
                     navController.navigate("profile") {
@@ -502,7 +489,7 @@ fun BottomNavigationBar(navController: NavController) {
                     modifier = iconModifier
                 )
             },
-            label = { Text("Profil") }, // Add text label
+            label = { Text("Profil") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = selectedColor,
                 selectedTextColor = selectedColor,

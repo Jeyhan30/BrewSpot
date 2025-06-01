@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.brewspot.view.home.Cafe
 import com.example.brewspot.view.menu.MenuItem
 import com.example.brewspot.view.menu.MenuViewModel
+import com.example.brewspot.view.payment.PaymentMethod
 import com.example.brewspot.view.reservationTest.TableViewModel
 import com.example.brewspot.view.voucher.Voucher
 import com.google.firebase.auth.FirebaseAuth
@@ -49,14 +50,29 @@ class ConfirmationViewModel : ViewModel() {
 
     private val _appliedVoucher = MutableStateFlow<Voucher?>(null)
     val appliedVoucher: StateFlow<Voucher?> = _appliedVoucher
+    fun setTableViewModel(viewModel: TableViewModel) {
+        this.tableViewModel = viewModel
+    }
     fun applyVoucher(voucher: Voucher?) {
         _appliedVoucher.value = voucher
         recalculateTotals() // Panggil ini setiap kali voucher diterapkan atau dihapus
     }
-    fun setTableViewModel(viewModel: TableViewModel) {
-        this.tableViewModel = viewModel
-    }
 
+    private fun recalculateTotals() { //
+        val totalMenuOrderPrice = orderedMenuItems.value.sumOf { it.price * it.quantity } //
+        var baseTotal = totalMenuOrderPrice + appFeeAmount //
+
+        _appliedVoucher.value?.let { voucher -> //
+            if (baseTotal >= voucher.minimal) { //
+                baseTotal -= voucher.potongan //
+                if (baseTotal < 0) baseTotal = 0.0 // Pastikan total tidak negatif
+            }
+        }
+
+        val dpAmount = baseTotal * downPaymentPercentage //
+        _calculatedDownPayment.value = dpAmount //
+        _totalPayment.value = baseTotal - dpAmount //
+    }
     fun fetchConfirmationDetails(cafeId: String, reservationId: String, menuViewModel: MenuViewModel) {
         viewModelScope.launch {
             Log.d("ConfViewModel", "Fetching confirmation details for Cafe ID: $cafeId, Reservation ID: $reservationId")
@@ -86,7 +102,7 @@ class ConfirmationViewModel : ViewModel() {
                 val totalMenuOrderPrice = currentCartItems.sumOf { it.price * it.quantity }
                 Log.d("ConfViewModel", "Total order price from menu items: $totalMenuOrderPrice")
 
-                // Calculate base total before down payment
+
                 var baseTotal = totalMenuOrderPrice + appFeeAmount
                 Log.d("ConfViewModel", "Base total (menu + app fee): $baseTotal")
 
@@ -100,14 +116,14 @@ class ConfirmationViewModel : ViewModel() {
                 val dpAmount = baseTotal * downPaymentPercentage
                 _calculatedDownPayment.value = dpAmount
                 _totalPayment.value = baseTotal - dpAmount
-
             } catch (e: Exception) {
                 Log.e("ConfViewModel", "Error fetching confirmation details: ${e.message}", e)
             }
+            recalculateTotals()
         }
     }
 
-    fun performCheckout(cafeId: String, reservationId: String, orderedItems: List<MenuItem>) {
+    fun performCheckout(cafeId: String, reservationId: String, orderedItems: List<MenuItem>,selectedPaymentMethod: PaymentMethod?) {
         viewModelScope.launch {
             Log.d("ConfViewModel", "Performing checkout...")
             val currentUser = auth.currentUser
@@ -118,14 +134,21 @@ class ConfirmationViewModel : ViewModel() {
 
             // Re-calculate totals to ensure consistency
             val totalMenuOrderPrice = orderedItems.sumOf { it.price * it.quantity }
-            val baseTotal = totalMenuOrderPrice + appFeeAmount
+            var baseTotal = totalMenuOrderPrice + appFeeAmount
+
+            // Apply voucher discount to baseTotal before calculating down payment
+            _appliedVoucher.value?.let { voucher ->
+                if (baseTotal >= voucher.minimal) {
+                    baseTotal -= voucher.potongan
+                    if (baseTotal < 0) baseTotal = 0.0
+                }
+            }
+
             val dpAmount = baseTotal * downPaymentPercentage
             val grandTotal = baseTotal - dpAmount
 
             if (orderedItems.isEmpty()) {
-                // If there are only fixed fees but no ordered menu items
-                // still allow checkout if the total payment is just the fixed fees.
-                if (grandTotal <= 0.1 && grandTotal >= -0.1) { // Check if total is approximately zero
+                if (grandTotal <= 0.1 && grandTotal >= -0.1) {
                     Log.d("ConfViewModel", "Proceeding with checkout with no menu items, and total is approximately zero.")
                 } else {
                     onFinalCheckoutFailure?.invoke("Tidak ada item menu untuk di-checkout.")
@@ -139,6 +162,15 @@ class ConfirmationViewModel : ViewModel() {
                 val email = userDoc.getString("email") ?: currentUser.email ?: "Unknown Email"
                 val phoneNumber = userDoc.getString("phoneNumber") ?: "N/A"
                 val cafeName = _cafeDetails.value?.name ?: "Unknown Cafe"
+
+                // --- NEW: Fetch reservation details here ---
+                val reservationDoc = db.collection("reservations").document(reservationId).get().await()
+                val reservationDetails = if (reservationDoc.exists()) {
+                    reservationDoc.data // Get all data from the reservation document
+                } else {
+                    null
+                }
+                // --- END NEW ---
 
                 val orderItemsData = orderedItems.map { item ->
                     hashMapOf(
@@ -155,18 +187,38 @@ class ConfirmationViewModel : ViewModel() {
                 val orderHistory = hashMapOf(
                     "items" to orderItemsData,
                     "timestamp" to FieldValue.serverTimestamp(),
-                    "totalPrice" to grandTotal, // Save the grand total (after down payment)
+                    "totalPrice" to grandTotal,
                     "userId" to currentUser.uid,
                     "username" to username,
                     "userEmail" to email,
                     "userPhone" to phoneNumber,
                     "cafeId" to cafeId,
                     "cafeName" to cafeName,
-                    "reservationId" to reservationId, // Link history to reservation
-                    "totalMenuOrderPrice" to totalMenuOrderPrice, // NEW: Save menu total
-                    "appFeeAmount" to appFeeAmount, // NEW: Save app fee
-                    "downPaymentAmount" to dpAmount // NEW: Save down payment amount
+                    "reservationId" to reservationId,
+                    "totalMenuOrderPrice" to totalMenuOrderPrice,
+                    "appFeeAmount" to appFeeAmount,
+                    "downPaymentAmount" to dpAmount,
+                    "voucherPotongan" to (_appliedVoucher.value?.potongan ?: 0.0),
+                    "voucherName" to (_appliedVoucher.value?.name ?: "")
                 )
+                selectedPaymentMethod?.let { method ->
+                    orderHistory["paymentMethodId"] = method.id
+                } ?: run {
+                    orderHistory["paymentMethodId"] = "No Method Selected"
+                    orderHistory["paymentMethodName"] = "Tidak ada metode pembayaran dipilih"
+                    orderHistory["paymentMethodImageUrl"] = ""
+                }
+
+                // --- NEW: Add reservation details to orderHistory ---
+                if (reservationDetails != null) {
+                    orderHistory["reservationCafeName"] = reservationDetails["cafeName"] ?: "Unknown"
+                    orderHistory["date"] = reservationDetails["date"] ?: "N/A"
+                    orderHistory["reservationTime"] = reservationDetails["time"] ?: "N/A"
+                    orderHistory["reservationTotalGuests"] = reservationDetails["totalGuests"] ?: 0
+                    orderHistory["reservationSelectedTables"] = reservationDetails["selectedTables"] ?: emptyList<String>()
+                    // Anda bisa menambahkan detail lain dari reservasi jika diperlukan
+                }
+                // --- END NEW ---
 
                 db.collection("history")
                     .add(orderHistory)
@@ -175,8 +227,9 @@ class ConfirmationViewModel : ViewModel() {
 
                         viewModelScope.launch {
                             try {
-                                val reservationDoc = db.collection("reservations").document(reservationId).get().await()
-                                if (reservationDoc.exists()) {
+                                // The reservationDoc is already fetched above, no need to fetch again
+                                // val reservationDoc = db.collection("reservations").document(reservationId).get().await()
+                                if (reservationDoc.exists()) { // Use the already fetched reservationDoc
                                     val selectedTables = reservationDoc.get("selectedTables") as? List<String>
                                     selectedTables?.forEach { tableId ->
                                         db.collection("Cafe").document(cafeId)

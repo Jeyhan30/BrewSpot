@@ -35,8 +35,8 @@ class TableViewModel : ViewModel() {
     // lastReservationDetails tidak lagi diperlukan dengan pendekatan reset unconditional
     // private var lastReservationDetails: Triple<String?, String?, Int>? = null
 
-    var cafe: Cafe? by mutableStateOf(null)
-
+    private val _cafe = MutableStateFlow<Cafe?>(null)
+    val cafe: StateFlow<Cafe?> = _cafe
     private var snapshotListener: ListenerRegistration? = null
 
     private val _resetTableStateTrigger = MutableSharedFlow<Unit>()
@@ -72,14 +72,18 @@ class TableViewModel : ViewModel() {
                 try {
                     val documentSnapshot = db.collection("Cafe").document(id).get().await()
                     if (documentSnapshot.exists()) {
-                        cafe = Cafe.fromFirestore(documentSnapshot)
+                        _cafe.value = Cafe.fromFirestore(documentSnapshot) // <-- PERUBAHAN DI SINI
+                    } else {
+                        _cafe.value = null // Atur ke null jika kafe tidak ditemukan
                     }
                 } catch (e: Exception) {
                     println("Error fetching cafe details: ${e.message}")
+                    _cafe.value = null // Atur ke null jika terjadi kesalahan
                 }
             }
         }
     }
+
 
     private fun observeTables(currentCafeId: String) {
         snapshotListener?.remove()
@@ -112,22 +116,19 @@ class TableViewModel : ViewModel() {
         snapshotListener?.remove()
     }
 
-    fun toggleTableSelection(tableId: String, maxSelections: Int) {
-        if (_tables.value[tableId] == true) {
-            return
+    fun toggleTableSelection(tableId: String) { // Removed 'maxSelections: Int' parameter
+        if (_tables.value[tableId] == true) { //
+            return //
         }
 
-        val currentSelection = selectedTables.toMutableSet()
-        if (currentSelection.contains(tableId)) {
-            currentSelection.remove(tableId)
+        val currentSelection = selectedTables.toMutableSet() //
+        if (currentSelection.contains(tableId)) { //
+            currentSelection.remove(tableId) //
         } else {
-            if (currentSelection.size < maxSelections) {
-                currentSelection.add(tableId)
-            } else {
-                println("Cannot select more than $maxSelections tables.")
-            }
+            // Removed the size check to allow unlimited selection
+            currentSelection.add(tableId) //
         }
-        selectedTables = currentSelection
+        selectedTables = currentSelection //
     }
 
     fun bookSelectedTables() {

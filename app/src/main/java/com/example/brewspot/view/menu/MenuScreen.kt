@@ -339,7 +339,7 @@ fun MenuItemCard(item: MenuItem, onAddClick: () -> Unit) {
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp),
                         modifier = Modifier
-                            .padding(start = 80.dp)
+                            .padding(start = 130.dp)
                             .width(80.dp)
                     ) {
                         Text("Tambah", color = Color.White, fontSize = 12.sp)

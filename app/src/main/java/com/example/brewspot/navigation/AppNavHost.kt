@@ -38,6 +38,8 @@ import com.example.brewspot.view.cafe_detail.CafeDetailScreen
 import com.example.brewspot.view.cafe_detail.CafeDetailViewModel
 import com.example.brewspot.view.confirmation.ConfirmationPaymentScreen
 import com.example.brewspot.view.confirmation.ConfirmationViewModel
+import com.example.brewspot.view.payment.PaymentMethodScreen
+import com.example.brewspot.view.payment.PaymentMethodViewModel
 import com.example.brewspot.view.voucher.VoucherScreen
 import java.net.URLDecoder // Import untuk URLDecoder
 
@@ -59,7 +61,7 @@ fun AppNavigation() {
     val homeViewModel: HomeViewModel = viewModel() // <-- Correctly initialize HomeViewModel here
     val menuViewModel: MenuViewModel = viewModel() // Initialize MenuViewModel here
     val confirmationViewModel: ConfirmationViewModel = viewModel() // ADD THIS LINE
-
+    val paymentMethodViewModel: PaymentMethodViewModel = viewModel() //
 
     NavHost(navController = navController, startDestination = "login") {
         composable("register") {
@@ -152,7 +154,8 @@ fun AppNavigation() {
                     cafeId = cafeId,
                     reservationId = reservationId,
                     viewModel = confirmationViewModel,
-                    menuViewModel = menuViewModel // Pass MenuViewModel explicitly if not done via Hilt
+                    menuViewModel = menuViewModel,
+                    paymentMethodViewModel = paymentMethodViewModel// Pass MenuViewModel explicitly if not done via Hilt
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -160,12 +163,16 @@ fun AppNavigation() {
                 }
             }
         }
-        composable("voucherScreen") {
-            VoucherScreen(navController = navController)
+        composable("voucherScreen") { //
+            VoucherScreen(navController = navController, confirmationViewModel = confirmationViewModel) //
         }
 
-
-
+        composable("paymentMethodScreen") { //
+            PaymentMethodScreen(
+                navController = navController,
+                paymentMethodViewModel = paymentMethodViewModel
+            )
+        }
     // Rute untuk TableLayoutScreen dengan cafeId sebagai path parameter
     // dan parameter reservasi lainnya sebagai query parameters
     composable(
