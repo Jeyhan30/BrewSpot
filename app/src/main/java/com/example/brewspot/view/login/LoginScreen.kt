@@ -258,19 +258,19 @@ fun LoginScreen(
             )
 
             Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Lupa Kata Sandi?", // Changed text to match UI
-                color = orangeColor,
-                fontSize = 12.sp, // Adjusted font size
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 4.dp)
-                    .clickable {
-                        // TODO: aksi lupa password
-                    },
-                textAlign = TextAlign.End
-            )
+//
+//            Text(
+//                text = "Lupa Kata Sandi?", // Changed text to match UI
+//                color = orangeColor,
+//                fontSize = 12.sp, // Adjusted font size
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(end = 4.dp)
+//                    .clickable {
+//                        // TODO: aksi lupa password
+//                    },
+//                textAlign = TextAlign.End
+//            )
 
             Spacer(modifier = Modifier.height(24.dp)) // Increased spacing
 

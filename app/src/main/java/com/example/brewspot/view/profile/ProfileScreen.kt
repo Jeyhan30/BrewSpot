@@ -215,7 +215,7 @@ fun ProfileScreen(
                 ProfileOptionCard(
                     icon = Icons.Default.Info,
                     text = "Tentang Aplikasi",
-                    onClick = { /* TODO: Navigate to About App */ }
+                    onClick = { navController.navigate("about_app") }
                 )
                 Spacer(modifier = Modifier.height(24.dp)) // Space before logout
 

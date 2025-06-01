@@ -306,14 +306,14 @@ fun CafeDetailScreen(
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                painterResource(id = R.drawable.hide),
+                                painterResource(id = R.drawable.money),
                                 contentDescription = "Price Range",
                                 tint = Color.Black,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             // You can activate the line below if priceRange exists
-//                            Text("Rp ${currentCafe.priceRange}", fontSize = 14.sp, color = GrayText)
+                            Text("Rp ${currentCafe.priceRange}", fontSize = 14.sp, color = BrownColor)
                         }
                     } ?: run {
                         Text(

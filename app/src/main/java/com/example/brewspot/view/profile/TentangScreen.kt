@@ -1,44 +1,40 @@
 package com.example.brewspot.view.profile
 
-
-
-
-import android.content.Intent
-import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext // Keep this import
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.brewspot.R // Make sure this R is correct for your project
+import androidx.compose.ui.layout.ContentScale // Import ContentScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TentangScreen(navController: NavController) {
-    val brownColor = Color(0xFF5D4037) // Dark brown color
-    val lightBrownBackground = Color(0xFFF0F0F0) // Light gray for overall background
-    val context = LocalContext.current // <--- MOVED THIS LINE HERE
+    val brownColor = Color(0xFF5D4037)
+    val lightGrayBackground = Color(0xFFF0F0F0)
+    val darkGrayText = Color(0xFF424242)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Bantuan & Dukungan",
+                        "Tentang BrewSpot",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
@@ -58,100 +54,122 @@ fun TentangScreen(navController: NavController) {
                     titleContentColor = Color.White
                 )
             )
-        }
+        },
+        containerColor = lightGrayBackground // Set scaffold background
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(lightBrownBackground)
-                .padding(horizontal = 24.dp), // Padding for the cards themselves
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp)
         ) {
-            Spacer(modifier = Modifier.height(32.dp)) // Space below the top bar
-
-            // Bantuan Telepon Card
-            TentangOptionCard(
-                icon = Icons.Default.Call, // Using Material Icons
-                iconBackgroundColor = Color(0xFFE0BBE4), // Purple-ish background for icon
-                title = "Bantuan Telepon",
-                subtitle = "(021) 6510300",
-                onClick = {
-                    // val context = LocalContext.current // <--- REMOVED FROM HERE
-                    val phoneNumber = "0216510300"
-                    val intent = Intent(Intent.ACTION_DIAL).apply {
-                        data = Uri.parse("tel:$phoneNumber")
-                    }
-                    if (intent.resolveActivity(context.packageManager) != null) {
-                        context.startActivity(intent)
-                    } else {
-                        // Handle case where no dialer app is available
-                        // Toast.makeText(context, "No app to handle phone calls", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-
-}
-
-@Composable
-fun TentangOptionCard(
-    icon: ImageVector, // Or replace with painterResource if using custom drawables
-    iconBackgroundColor: Color,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(90.dp) // Fixed height for consistency
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Icon with colored background
-            Box(
+            // Application Icon/Logo (optional, but good for branding)
+            Column(
                 modifier = Modifier
-                    .size(50.dp) // Size of the colored circle around the icon
-                    .clip(RoundedCornerShape(12.dp)) // Rounded corners for the icon background
-                    .background(iconBackgroundColor),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth(),
+                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null, // Content description for icon handled by text
-                    tint = Color.White, // Icon color
-                    modifier = Modifier.size(28.dp) // Size of the icon itself
+                // MODIFIED: Use Image composable for raster images (JPEG, PNG)
+                Image(
+                    painter = painterResource(id = R.drawable.logobrewjos), // Your JPEG logo
+                    contentDescription = "BrewSpot Logo",
+                    modifier = Modifier.size(200.dp), // Set the desired size
+                    contentScale = ContentScale.Fit
+                )
+                // MODIFIED: Kurangi tinggi Spacer untuk mendekatkan jarak
+                Text(
+                    text = "Versi 1.0.0", // Replace with your app's current version
+                    fontSize = 16.sp,
+                    color = darkGrayText
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Text content
-            Column {
-                Text(
-                    text = title,
-                    color = Color.Black,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = subtitle,
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+            // About Section Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    Text(
+                        text = "Apa itu BrewSpot?",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = brownColor
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "BrewSpot adalah aplikasi pendamping sempurna bagi para pecinta kopi dan kafe di Malang. Kami hadir untuk memudahkan Anda menemukan kafe terbaik, melakukan reservasi, dan menikmati pengalaman 'ngopi' tanpa hambatan.",
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
+                        color = darkGrayText,
+                        textAlign = TextAlign.Justify
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Fitur Unggulan:",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = brownColor
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // List of features
+                    Text(
+                        text =  "1. Pencarian Kafe: Temukan kafe berdasarkan lokasi, popularitas, atau rekomendasi khusus.\n" +
+                                "2. Detail Kafe Lengkap: Lihat informasi jam operasional, alamat, fasilitas, dan galeri foto.\n" +
+                                "3. Reservasi Mudah: Pesan meja di kafe favorit Anda dengan cepat dan praktis.\n" +
+                                "4. Riwayat Reservasi: Lacak semua reservasi Anda dengan mudah.\n" +
+                                "5. Profil Pengguna: Kelola informasi akun Anda dengan aman.",
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
+                        color = darkGrayText
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Visi Kami:",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = brownColor
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Menjadi jembatan antara komunitas kopi dan kafe di Malang, menciptakan pengalaman bersosialisasi yang lebih baik dan mendukung pertumbuhan kafe lokal.",
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
+                        color = darkGrayText,
+                        textAlign = TextAlign.Justify
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Terima kasih telah menggunakan BrewSpot!",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = brownColor,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Copyright / Developer Info (optional)
+            Text(
+                text = "© 2024 BrewSpot. All rights reserved.",
+                fontSize = 12.sp,
+                color = darkGrayText.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

@@ -38,8 +38,11 @@ import com.example.brewspot.view.cafe_detail.CafeDetailScreen
 import com.example.brewspot.view.cafe_detail.CafeDetailViewModel
 import com.example.brewspot.view.confirmation.ConfirmationPaymentScreen
 import com.example.brewspot.view.confirmation.ConfirmationViewModel
+import com.example.brewspot.view.history.HistoryScreen
+import com.example.brewspot.view.history.HistoryViewModel
 import com.example.brewspot.view.payment.PaymentMethodScreen
 import com.example.brewspot.view.payment.PaymentMethodViewModel
+import com.example.brewspot.view.profile.TentangScreen
 import com.example.brewspot.view.voucher.VoucherScreen
 import java.net.URLDecoder // Import untuk URLDecoder
 
@@ -52,7 +55,7 @@ fun AppNavigation() {
     val firestore = FirebaseFirestore.getInstance()
     val repository = AuthRepository(auth, firestore)
     val loginViewModelFactory = LoginViewModelFactory(repository)
-
+    val historyViewModel: HistoryViewModel = viewModel() // Initialize HistoryViewModel here
     // Inisialisasi ViewModel menggunakan factory atau default
     val loginViewModel: LoginViewModel = viewModel(factory = loginViewModelFactory)
     val cafeDetailViewModel: CafeDetailViewModel = viewModel()
@@ -239,6 +242,13 @@ fun AppNavigation() {
             )
         }
     }
+        composable("history") { // <--- ADD THIS NEW ROUTE
+            HistoryScreen(navController = navController, viewModel = historyViewModel)
+        }
+
+        composable("about_app") {
+            TentangScreen(navController = navController)
+        }
     // Anda bisa menambahkan rute lain di sini
 }
 }

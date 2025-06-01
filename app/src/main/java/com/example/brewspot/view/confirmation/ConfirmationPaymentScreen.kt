@@ -70,6 +70,7 @@ fun ConfirmationPaymentScreen(
     val brownColor = Color(0xFF5D4037)
     val lightGreyBackground = Color(0xFFF0F0F0)
     val context = LocalContext.current
+    val isPaymentMethodSelected = selectedPaymentMethod != null
 
     LaunchedEffect(cafeId, reservationId, currentMenuCartItems) {
         Log.d("ConfPaymentScreen", "LaunchedEffect triggered. Calling fetchConfirmationDetails.")
@@ -132,14 +133,22 @@ fun ConfirmationPaymentScreen(
                     }
                     Button(
                         onClick = {
-                            viewModel.performCheckout(
-                                cafeId = cafeId,
-                                reservationId = reservationId,
-                                orderedItems = orderedMenuItems,
-                                selectedPaymentMethod = selectedPaymentMethod
-                            )
+                            if (isPaymentMethodSelected) { // Check if payment method is selected
+                                viewModel.performCheckout(
+                                    cafeId = cafeId,
+                                    reservationId = reservationId,
+                                    orderedItems = orderedMenuItems,
+                                    selectedPaymentMethod = selectedPaymentMethod
+                                )
+                            } else {
+                                Toast.makeText(context, "Pilih metode pembayaran terlebih dahulu", Toast.LENGTH_SHORT).show()
+                            }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = brownColor),
+                        enabled = isPaymentMethodSelected, // NEW: Control button enabled state
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = brownColor,
+                            disabledContainerColor = Color.Gray // Optional: Visual feedback when disabled
+                        ),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.height(48.dp)
                     ) {
@@ -556,15 +565,18 @@ fun ConfirmationPaymentScreen(
     }
 
 }
-
 @Composable
 fun MenuItemConfirmationCard(item: MenuItem) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween // Ini penting untuk memisahkan kuantitas ke kanan
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // Kolom untuk Gambar dan Detail Menu
+        Row(
+            modifier = Modifier.weight(1f), // Beri bobot agar mengisi ruang
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             val imagePainter = rememberAsyncImagePainter(
                 model = item.imageUrl,
                 placeholder = painterResource(id = R.drawable.coffee), // Placeholder
@@ -580,7 +592,13 @@ fun MenuItemConfirmationCard(item: MenuItem) {
             )
 
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
+
+            Column(
+                // Tambahkan modifier widthIn agar kolom ini tidak terlalu lebar dan mendesak kuantitas
+                // Sesuaikan nilai maxWidth dengan lebar yang Anda inginkan sebelum teks deskripsi memotong kuantitas
+                modifier = Modifier.weight(1f, fill = false) // fill = false agar tidak memenuhi sisa ruang secara paksa
+                    .widthIn(max = 180.dp) // Sesuaikan nilai ini, misal 150.dp atau 180.dp
+            ) {
                 Text(
                     text = item.name,
                     color = Color.Black,
@@ -594,7 +612,7 @@ fun MenuItemConfirmationCard(item: MenuItem) {
                     text = item.description, // Display description
                     color = Color.Gray,
                     fontSize = 12.sp,
-                    maxLines = 1,
+                    maxLines = 1, // Pastikan ini tetap 1
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
@@ -605,16 +623,14 @@ fun MenuItemConfirmationCard(item: MenuItem) {
                 )
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "${item.quantity}",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.width(8.dp))
 
-        }
+        // Bagian Kuantitas (paling kanan)
+        Text(
+            text = "${item.quantity}",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+        )
     }
 }
 @Composable

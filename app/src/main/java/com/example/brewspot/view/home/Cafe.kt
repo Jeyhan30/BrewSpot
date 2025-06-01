@@ -13,7 +13,8 @@ data class Cafe(
     val image: String = "", // Untuk gambar potret/logo
     val imageDetail: String = "", // Untuk gambar landscape/detail di atas
     val menuItems: List<MenuItem> = emptyList(),
-    val denahImage: String = ""// Add this line for menu items
+    val denahImage: String = "",
+    val priceRange: String = ""
 
 ) {
     companion object {
@@ -25,7 +26,8 @@ data class Cafe(
                 jamOperasional = doc.getString("jam_operasional") ?: "",
                 image = doc.getString("image") ?: "", // Ambil dari field 'image'
                 imageDetail = doc.getString("imagedetail") ?: "",
-                denahImage = doc.getString("denah") ?: ""// Ambil dari field 'image_detail'
+                denahImage = doc.getString("denah") ?: "",
+                priceRange = doc.getString("priceRange") ?: ""// Ambil dari field 'image_detail'
             )
         }
     }
