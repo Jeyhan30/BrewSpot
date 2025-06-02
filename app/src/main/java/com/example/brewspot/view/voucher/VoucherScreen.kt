@@ -30,13 +30,11 @@ import com.example.brewspot.view.confirmation.ConfirmationViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
-// Fungsi formatRupiah (sudah ada di tempat lain, pastikan bisa diakses atau duplikasi)
 fun formatRupiah(number: Double): String {
     val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
     return format.format(number)
 }
 
-// NEW: Fungsi untuk format angka menjadi "Xrb"
 fun formatRibuan(amount: Double): String {
     return if (amount >= 1000) {
         val thousands = amount / 1000
@@ -51,8 +49,7 @@ fun formatRibuan(amount: Double): String {
 fun VoucherScreen(
     navController: NavController,
     voucherViewModel: VoucherViewModel = viewModel(),
-    confirmationViewModel: ConfirmationViewModel = viewModel() // ADD THIS LINE
-// Inject ViewModel
+    confirmationViewModel: ConfirmationViewModel = viewModel()
 ) {
     val vouchers by voucherViewModel.vouchers.collectAsState()
     val selectedVoucher by voucherViewModel.selectedVoucher.collectAsState()
@@ -89,7 +86,7 @@ fun VoucherScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(lightGreyBackground)
-                .padding(horizontal = 16.dp, vertical = 8.dp) // Adjusted padding
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -104,7 +101,7 @@ fun VoucherScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp), // Spasi antar voucher card
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(vouchers) { voucher ->
@@ -113,8 +110,8 @@ fun VoucherScreen(
                             isSelected = voucher == selectedVoucher,
                             onSelect = { voucherViewModel.selectVoucher(voucher) },
                             onUse = {
-                                confirmationViewModel.applyVoucher(voucher) // Gunakan voucher melalui ConfirmationViewModel
-                                navController.popBackStack() // Kembali ke layar sebelumnya
+                                confirmationViewModel.applyVoucher(voucher)
+                                navController.popBackStack()
                             }
                         )
                     }
@@ -128,17 +125,17 @@ fun VoucherScreen(
 fun VoucherCard(
     voucher: Voucher,
     isSelected: Boolean,
-    onSelect: (Voucher) -> Unit, // Callback ketika voucher dipilih
-    onUse: (Voucher) -> Unit // Callback ketika tombol "Pakai" diklik
+    onSelect: (Voucher) -> Unit,
+    onUse: (Voucher) -> Unit
 ) {
     val borderColor = if (isSelected) Color.DarkGray else Color.LightGray
-    val backgroundColor = if (isSelected) Color(0xFFFFFBE0) else Color.White // Slightly yellowish if selected
+    val backgroundColor = if (isSelected) Color(0xFFFFFBE0) else Color.White
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .border(1.dp, borderColor, RoundedCornerShape(12.dp))
-            .clickable { onSelect(voucher) }, // Klik pada card untuk memilih
+            .clickable { onSelect(voucher) },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -153,7 +150,7 @@ fun VoucherCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
-                        painter = painterResource(id = R.drawable.voucher), // Ganti dengan ikon voucher Anda
+                        painter = painterResource(id = R.drawable.voucher),
                         contentDescription = "Voucher Icon",
                         modifier = Modifier.size(48.dp)
                     )
@@ -166,7 +163,6 @@ fun VoucherCard(
                             color = Color.Black
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        // MODIFIED: Menggunakan formatRibuan untuk minimal
                         Text(
                             text = "Min. Pembayaran ${formatRibuan(voucher.minimal)}",
                             fontSize = 12.sp,
@@ -196,12 +192,11 @@ fun VoucherCard(
             Spacer(modifier = Modifier.height(12.dp))
             Divider(color = Color.LightGray, thickness = 1.dp)
             Spacer(modifier = Modifier.height(12.dp))
-            // Tampilkan potongan nominal
             Text(
-                text = "Hemat s.d. ${formatRibuan(voucher.potongan)}", // Menampilkan potongan nominal
+                text = "Hemat s.d. ${formatRibuan(voucher.potongan)}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = brownColor // Warna untuk teks "Hemat"
+                color = brownColor
             )
         }
     }

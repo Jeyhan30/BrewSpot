@@ -56,18 +56,13 @@ class CustomTopShape : Shape {
         val width = size.width
         val height = size.height
 
-        // Mulai dari kiri atas
         moveTo(0f, 0f)
-        // Garis ke kanan atas
         lineTo(width, 0f)
-        // Garis ke kanan bawah
         lineTo(width, height * 0.65f)
-        // Lengkung dari kanan ke kiri
         quadraticBezierTo(
-            width / 2, height * 0.95f, // titik kontrol diturunkan untuk lengkungan besar
+            width / 2, height * 0.95f,
             0f, height * 0.65f
         )
-        // Tutup path kembali ke kiri atas
         close()
     })
 }
@@ -84,10 +79,10 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val brownColor = Color(0xFF5D4037) // A darker brown to match the image
-    val orangeColor = Color(0xFFB37300) // This orange seems to be for links/buttons
-    val lightGrayBackground = Color(0xFFE0E0E0) // Light gray for the "Masuk" button background
-    val darkGrayText = Color(0xFF424242) // Dark gray for text
+    val brownColor = Color(0xFF5D4037)
+    val orangeColor = Color(0xFFB37300)
+    val lightGrayBackground = Color(0xFFE0E0E0)
+    val darkGrayText = Color(0xFF424242)
 
     val context = LocalContext.current
     val activity = context as? Activity
@@ -126,15 +121,16 @@ fun LoginScreen(
 
                                     userDoc.set(userData)
                                         .addOnSuccessListener {
-                                            navController.navigate("welcome/${user?.displayName ?: "User"}")
-                                        }
+                                            navController.navigate("welcome/${user?.displayName ?: "User"}") {
+                                                popUpTo("login") { inclusive = true }
+                                            }                                        }
                                         .addOnFailureListener { e ->
                                             errorMessage = "Gagal menyimpan user: ${e.localizedMessage}"
                                         }
                                 } else {
-                                    // user sudah ada, langsung lanjut
-                                    navController.navigate("welcome/${it.displayName ?: "User"}")
-                                }
+                                    navController.navigate("welcome/${it.displayName ?: "User"}") {
+                                        popUpTo("login") { inclusive = true }
+                                    }                                }
                             }.addOnFailureListener { e ->
                                 errorMessage = "Error cek user: ${e.localizedMessage}"
                             }
@@ -165,24 +161,23 @@ fun LoginScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Top section
         Box(
             modifier = Modifier
                 .clip(CustomTopShape())
                 .fillMaxWidth()
-                .weight(0.3f) // Adjust weight to control height
+                .weight(0.3f)
                 .background(brownColor)
-                , // Apply the custom shape without cornerRadius parameter
+                ,
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 0.dp) // Add padding to push content down from status bar
+                modifier = Modifier.padding(top = 0.dp)
             ) {
                 Text(
                     "Login",
                     color = Color.White,
-                    fontSize = 32.sp, // Larger font size
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -195,22 +190,22 @@ fun LoginScreen(
             }
         }
 
-        // Bottom section (login form)
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.6f) // Adjust weight to control height
-                .padding(horizontal = 24.dp) // Apply horizontal padding here
-                .offset(y = (-40).dp), // Adjust vertical offset to overlap with the brown background
+                .weight(0.6f)
+                .padding(horizontal = 24.dp)
+                .offset(y = (-40).dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") }, // Changed label to match UI
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = { Icon(painterResource(id = R.drawable.email), contentDescription = "Email Icon", modifier = Modifier.size(20.dp)) },
-                        shape = RoundedCornerShape(12.dp), // More rounded corners
+                        shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Gray,
@@ -222,28 +217,28 @@ fun LoginScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp)) // Increased spacing
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Kata Sandi") }, // Changed label to match UI
+                label = { Text("Kata Sandi") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp), // More rounded corners
+                shape = RoundedCornerShape(12.dp),
                 leadingIcon = { Icon(painterResource(id = R.drawable.lock), contentDescription = "Password Icon", modifier = Modifier.size(20.dp)) },
                         singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
                     val image = if (passwordVisible)
-                        painterResource(id = R.drawable.show) // Make sure you have this icon
+                        painterResource(id = R.drawable.show)
                     else
-                        painterResource(id = R.drawable.hide) // Make sure you have this icon
+                        painterResource(id = R.drawable.hide)
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             painter = image,
                             contentDescription = "Toggle password visibility",
-                            modifier = Modifier.size(20.dp) // <-- Add this line to control icon size
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 },
@@ -258,21 +253,8 @@ fun LoginScreen(
             )
 
             Spacer(modifier = Modifier.height(4.dp))
-//
-//            Text(
-//                text = "Lupa Kata Sandi?", // Changed text to match UI
-//                color = orangeColor,
-//                fontSize = 12.sp, // Adjusted font size
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(end = 4.dp)
-//                    .clickable {
-//                        // TODO: aksi lupa password
-//                    },
-//                textAlign = TextAlign.End
-//            )
 
-            Spacer(modifier = Modifier.height(24.dp)) // Increased spacing
+            Spacer(modifier = Modifier.height(24.dp))
 
             val interactionSource = remember { MutableInteractionSource() }
             val isPressed by interactionSource.collectIsPressedAsState()
@@ -284,16 +266,16 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    // VALIDATION: Check if email or password fields are empty
                     if (email.isBlank() || password.isBlank()) {
                         errorMessage = "Email dan kata sandi tidak boleh kosong."
-                        return@Button // Stop further execution of onClick
+                        return@Button
                     }
 
-                    // If fields are not empty, proceed with login attempt
                     viewModel.login(email, password) { success, username ->
                         if (success && username != null) {
-                            navController.navigate("welcome/$username")
+                            navController.navigate("welcome/$username") {
+                                popUpTo("login") { inclusive = true }
+                            }
                         } else {
                             errorMessage = "Email atau password salah. Silakan coba lagi."
                         }
@@ -319,7 +301,7 @@ fun LoginScreen(
             ) {
                 Divider(modifier = Modifier.weight(1f), color = Color.LightGray, thickness = 1.dp)
                 Text(
-                    "Atau dengan", // Changed text to match UI
+                    "Atau dengan",
                     modifier = Modifier.padding(horizontal = 8.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
@@ -337,9 +319,9 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(12.dp), // Rounded corners for Google button
+                shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, Color.LightGray),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black) // Black content for text/icon
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.icons8_google_480),
@@ -347,26 +329,24 @@ fun LoginScreen(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Masuk dengan Google", fontSize = 16.sp) // Text for Google button
+                Text("Masuk dengan Google", fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Footer - Adjusted to match UI
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Belum punya akun? ", color = Color.Gray, style = MaterialTheme.typography.bodyMedium) // Adjusted color
                 Text(
-                    "Daftar", // Changed text to match UI
+                    "Daftar",
                     color = orangeColor,
-                    fontWeight = FontWeight.Bold, // Bold as in the image
-                    style = MaterialTheme.typography.bodyMedium, // Adjusted style
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.clickable {
                         navController.navigate("register")
                     },
-                    // textDecoration = TextDecoration.Underline // Removed underline
                 )
             }
         }

@@ -19,8 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.brewspot.R // Make sure this R is correct for your project
-import androidx.compose.ui.layout.ContentScale // Import ContentScale
+import com.example.brewspot.R
+import androidx.compose.ui.layout.ContentScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +55,7 @@ fun TentangScreen(navController: NavController) {
                 )
             )
         },
-        containerColor = lightGrayBackground // Set scaffold background
+        containerColor = lightGrayBackground
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -64,22 +64,19 @@ fun TentangScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            // Application Icon/Logo (optional, but good for branding)
             Column(
                 modifier = Modifier
                     .fillMaxWidth(),
                 horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
             ) {
-                // MODIFIED: Use Image composable for raster images (JPEG, PNG)
                 Image(
-                    painter = painterResource(id = R.drawable.logobrewjos), // Your JPEG logo
+                    painter = painterResource(id = R.drawable.logobrewjos),
                     contentDescription = "BrewSpot Logo",
-                    modifier = Modifier.size(200.dp), // Set the desired size
+                    modifier = Modifier.size(200.dp),
                     contentScale = ContentScale.Fit
                 )
-                // MODIFIED: Kurangi tinggi Spacer untuk mendekatkan jarak
                 Text(
-                    text = "Versi 1.0.0", // Replace with your app's current version
+                    text = "Versi 1.0.0",
                     fontSize = 16.sp,
                     color = darkGrayText
                 )
@@ -87,7 +84,6 @@ fun TentangScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // About Section Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -162,7 +158,6 @@ fun TentangScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Copyright / Developer Info (optional)
             Text(
                 text = "© 2024 BrewSpot. All rights reserved.",
                 fontSize = 12.sp,

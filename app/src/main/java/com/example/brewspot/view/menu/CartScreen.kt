@@ -83,18 +83,10 @@ fun CartScreen(
             ) {
                 Button(
                     onClick = {
-                        // NEW: Navigasi ke ConfirmationPaymentScreen dan teruskan item menu
-                        // Perlu mendapatkan reservationId dari MenuViewModel atau argumen
-                        val currentReservationId = menuViewModel.getCurrentReservationId() // Anda perlu membuat fungsi ini di MenuViewModel
+                        val currentReservationId = menuViewModel.getCurrentReservationId()
                         if (cafeId != null && currentReservationId != null && filteredCartItems.isNotEmpty()) {
-                            // Mengonversi daftar MenuItem menjadi string JSON untuk diteruskan
-                            // Atau, lebih baik, menggunakan objek yang bisa di-parcelable/serializable
-                            // Untuk kesederhanaan, mari kita pertahankan filteredCartItems di MenuViewModel.
-                            // Konfirmasi PaymentScreen akan mengambil dari MenuViewModel juga.
                             navController.navigate("confirmation_payment?cafeId=${cafeId}&reservationId=${currentReservationId}")
                         } else {
-                            // Tampilkan toast jika ada yang kurang
-                            // Anda bisa menambahkan Toast.makeText(LocalContext.current, "Pilih item atau lengkapi reservasi", Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier
@@ -103,10 +95,10 @@ fun CartScreen(
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = brownColor),
-                    enabled = filteredCartItems.isNotEmpty() // Enable button based on filtered items
+                    enabled = filteredCartItems.isNotEmpty()
                 ) {
                     Text(
-                        "Bayar Sekarang (${formatRupiah(totalPriceForCafe)})", // Display filtered total
+                        "Bayar Sekarang (${formatRupiah(totalPriceForCafe)})",
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
@@ -122,7 +114,7 @@ fun CartScreen(
                 .background(Color(0xFFF0F0F0))
                 .padding(16.dp)
         ) {
-            if (filteredCartItems.isEmpty()) { // Use filtered items
+            if (filteredCartItems.isEmpty()) {
                 Text(
                     "Keranjang Anda kosong untuk kafe ini. Mari tambahkan beberapa menu!",
                     modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.CenterHorizontally)
@@ -136,7 +128,7 @@ fun CartScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    items(filteredCartItems) { item -> // Use filtered items
+                    items(filteredCartItems) { item ->
                         CartItemDetailCard(
                             item = item,
                             onAddQuantity = { menuViewModel.addToCart(item) },
@@ -198,9 +190,8 @@ fun CartItemDetailCard(item: MenuItem, onAddQuantity: () -> Unit, onRemoveQuanti
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // Display cafe name for each item
                 Text(
-                    text = "Kafe ID: ${item.cafeId}", // Now showing the cafe ID
+                    text = "Kafe ID: ${item.cafeId}",
                     color = Color.DarkGray,
                     fontSize = 12.sp
                 )

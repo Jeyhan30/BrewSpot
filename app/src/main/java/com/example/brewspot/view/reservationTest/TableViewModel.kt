@@ -32,8 +32,6 @@ class TableViewModel : ViewModel() {
     var date: String? by mutableStateOf(null)
     var time: String? by mutableStateOf(null)
     var totalGuests: Int by mutableStateOf(0)
-    // lastReservationDetails tidak lagi diperlukan dengan pendekatan reset unconditional
-    // private var lastReservationDetails: Triple<String?, String?, Int>? = null
 
     private val _cafe = MutableStateFlow<Cafe?>(null)
     val cafe: StateFlow<Cafe?> = _cafe
@@ -55,10 +53,7 @@ class TableViewModel : ViewModel() {
         time: String?,
         totalGuests: Int
     ) {
-        // UNCONDITIONAL RESET AND REFRESH:
-        // Setiap kali fungsi ini dipanggil, kita asumsikan ini adalah awal dari
-        // proses pemilihan meja baru untuk sebuah reservasi.
-        selectedTables = mutableSetOf() // <-- RESET TANPA SYARAT UNTUK PILIHAN LOKAL
+        selectedTables = mutableSetOf()
 
         this.cafeId = cafeId
         this.userName = userName
@@ -67,18 +62,18 @@ class TableViewModel : ViewModel() {
         this.totalGuests = totalGuests
 
         cafeId?.let { id ->
-            observeTables(id) // Refresh data meja dari Firestore
+            observeTables(id)
             viewModelScope.launch {
                 try {
                     val documentSnapshot = db.collection("Cafe").document(id).get().await()
                     if (documentSnapshot.exists()) {
-                        _cafe.value = Cafe.fromFirestore(documentSnapshot) // <-- PERUBAHAN DI SINI
+                        _cafe.value = Cafe.fromFirestore(documentSnapshot)
                     } else {
-                        _cafe.value = null // Atur ke null jika kafe tidak ditemukan
+                        _cafe.value = null
                     }
                 } catch (e: Exception) {
                     println("Error fetching cafe details: ${e.message}")
-                    _cafe.value = null // Atur ke null jika terjadi kesalahan
+                    _cafe.value = null
                 }
             }
         }
@@ -116,19 +111,18 @@ class TableViewModel : ViewModel() {
         snapshotListener?.remove()
     }
 
-    fun toggleTableSelection(tableId: String) { // Removed 'maxSelections: Int' parameter
-        if (_tables.value[tableId] == true) { //
-            return //
+    fun toggleTableSelection(tableId: String) {
+        if (_tables.value[tableId] == true) {
+            return
         }
 
-        val currentSelection = selectedTables.toMutableSet() //
-        if (currentSelection.contains(tableId)) { //
-            currentSelection.remove(tableId) //
+        val currentSelection = selectedTables.toMutableSet()
+        if (currentSelection.contains(tableId)) {
+            currentSelection.remove(tableId)
         } else {
-            // Removed the size check to allow unlimited selection
-            currentSelection.add(tableId) //
+            currentSelection.add(tableId)
         }
-        selectedTables = currentSelection //
+        selectedTables = currentSelection
     }
 
     fun bookSelectedTables() {

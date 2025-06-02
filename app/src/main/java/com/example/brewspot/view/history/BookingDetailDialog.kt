@@ -17,11 +17,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.rememberAsyncImagePainter
-import com.example.brewspot.R // Sesuaikan dengan R.drawable.cafeeee atau placeholder Anda
-import com.example.brewspot.view.cafe_detail.loadImageModel // Pastikan ini diimpor
+import com.example.brewspot.R
+import com.example.brewspot.view.cafe_detail.loadImageModel
 import java.text.NumberFormat
 import java.util.Locale
-import com.example.brewspot.utils.formatRupiah // <-- TAMBAHKAN INI
+import com.example.brewspot.utils.formatRupiah
 
 
 @Composable
@@ -47,7 +47,6 @@ fun BookingDetailDialog(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Cafe Image
                 val imageModel = loadImageModel(booking.cafeImageUrl)
                 val painter = rememberAsyncImagePainter(
                     model = imageModel,
@@ -73,13 +72,12 @@ fun BookingDetailDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Detail Pemesanan dari Firestore (disesuaikan dengan field baru)
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     DetailRow("Nama Kafe:", booking.reservationCafeName ?: booking.cafeName)
                     DetailRow("ID Booking:", booking.reservationId ?: booking.id)
-                    DetailRow("Tanggal Booking:", booking.date) // Tanggal booking awal
+                    DetailRow("Tanggal Booking:", booking.date)
                     DetailRow("Waktu Reservasi:", booking.reservationTime ?: booking.time) // Waktu reservasi
                     DetailRow("Jumlah Tamu:", (booking.reservationTotalGuests ?: booking.totalGuests).toString())
                     DetailRow("Meja Dipilih:", (booking.reservationSelectedTables ?: booking.selectedTables)?.joinToString(", ") ?: "N/A")

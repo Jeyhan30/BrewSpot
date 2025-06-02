@@ -9,18 +9,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import android.util.Log
 
-// Data class untuk merepresentasikan metode pembayaran
 data class PaymentMethod(
-    val id: String, // ID dokumen Firestore (misal: QRIS, BANKBCA)
-    val name: String, // Nama metode pembayaran (misal: QRIS, BANK BCA)
-    val imageUrl: String // URL gambar/logo metode pembayaran
+    val id: String,
+    val name: String,
+    val imageUrl: String
 ) {
     companion object {
         fun fromFirestore(doc: com.google.firebase.firestore.DocumentSnapshot): PaymentMethod {
             return PaymentMethod(
                 id = doc.id,
                 name = doc.getString("name") ?: "",
-                imageUrl = doc.getString("gambar") ?: "" // Sesuaikan dengan nama field di Firestore
+                imageUrl = doc.getString("gambar") ?: ""
             )
         }
     }

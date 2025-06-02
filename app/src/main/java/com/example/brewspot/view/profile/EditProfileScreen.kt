@@ -27,7 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType // <--- Ensure this is imported
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,24 +47,20 @@ fun EditProfileScreen(
     val currentUser by profileViewModel.currentUser.collectAsState()
     val context = LocalContext.current
 
-    // State for editable fields, initialized with current user data
     var name by remember { mutableStateOf(currentUser?.username ?: "") }
-    var phoneNumber by remember { mutableStateOf(currentUser?.phoneNumber ?: "") } // <--- CHANGED: email replaced with phoneNumber
+    var phoneNumber by remember { mutableStateOf(currentUser?.phoneNumber ?: "") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    // State untuk Base64 string dari gambar profil yang sedang ditampilkan atau yang baru dipilih
     var displayedImageBase64 by remember { mutableStateOf<String?>(null) }
-    // Update state when currentUser changes (e.g., after fetching data or saving)
     LaunchedEffect(currentUser) {
         currentUser?.let {
             name = it.username
             phoneNumber = it.phoneNumber
-            // Jika currentUser memiliki imageUrl (Base64), tampilkan
             if (it.image.isNotEmpty()) {
                 displayedImageBase64 = it.image
             } else {
                 displayedImageBase64 = null
             }
-            selectedImageUri = null // Reset URI setelah data user di-load/update
+            selectedImageUri = null
         }
     }
 
@@ -72,23 +68,20 @@ fun EditProfileScreen(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
             uri?.let {
-                // Simpan URI sementara untuk menampilkan preview
                 selectedImageUri = it
-                // Konversi Uri ke Base64 string
                 val base64String = profileViewModel.convertUriToBase64(context, it)
                 if (base64String != null) {
-                    displayedImageBase64 = base64String // Update gambar yang ditampilkan segera
-                    // Langsung update profil user dengan Base64 gambar
+                    displayedImageBase64 = base64String
                     profileViewModel.updateProfile(
                         username = name,
                         phoneNumber = phoneNumber,
-                        base64Image = base64String, // Teruskan Base64 string ke ViewModel
+                        base64Image = base64String,
                         onSuccess = {
                             Toast.makeText(context, "Profil dan foto berhasil diperbarui!", Toast.LENGTH_SHORT).show()
                         },
                         onFailure = { errorMessage ->
                             Toast.makeText(context, "Gagal memperbarui foto: $errorMessage", Toast.LENGTH_LONG).show()
-                            displayedImageBase64 = currentUser?.image // Kembalikan ke gambar sebelumnya jika gagal
+                            displayedImageBase64 = currentUser?.image
                         }
                     )
                 } else {
@@ -98,9 +91,9 @@ fun EditProfileScreen(
         }
     )
 
-    val brownColor = Color(0xFF5D4037) // Dark brown color
-    val lightGrayBorder = Color(0xFFE0E0E0) // Light gray for text field borders
-    val lightBrownBackground = Color(0xFFF0F0F0) // Light gray for overall background
+    val brownColor = Color(0xFF5D4037)
+    val lightGrayBorder = Color(0xFFE0E0E0)
+    val lightBrownBackground = Color(0xFFF0F0F0)
 
     Scaffold(
         topBar = {
@@ -144,23 +137,21 @@ fun EditProfileScreen(
                     .size(120.dp)
                     .clip(CircleShape)
                     .background(Color.Gray)
-                    .clickable { imagePickerLauncher.launch("image/*") }, // KLIK UNTUK MEMILIH GAMBAR
+                    .clickable { imagePickerLauncher.launch("image/*") },
                 contentAlignment = Alignment.Center
             ) {
-                // Menentukan gambar yang akan ditampilkan
                 val imageBitmap: Bitmap? = remember(displayedImageBase64) {
                     decodeBase64ToBitmap(displayedImageBase64)
                 }
 
                 if (imageBitmap != null) {
                     Image(
-                        bitmap = imageBitmap.asImageBitmap(), // Gunakan asImageBitmap untuk Bitmap
+                        bitmap = imageBitmap.asImageBitmap(),
                         contentDescription = "Profile Picture",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-                    // Placeholder jika tidak ada gambar atau gagal decode
                     Image(
                         painter = painterResource(id = R.drawable.user),
                         contentDescription = "Default Profile Picture",
@@ -169,7 +160,6 @@ fun EditProfileScreen(
                     )
                 }
 
-                // Edit Icon Overlay
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -178,7 +168,7 @@ fun EditProfileScreen(
                         .border(2.dp, Color.White, CircleShape)
                         .align(Alignment.BottomEnd)
                         .offset(x = (-4).dp, y = (-4).dp)
-                        .clickable { imagePickerLauncher.launch("image/*") }, // KLIK UNTUK MEMILIH GAMBAR
+                        .clickable { imagePickerLauncher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -192,7 +182,6 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Input Fields
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -225,16 +214,15 @@ fun EditProfileScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Nomor Telepon (formerly Email)
                 Text(
-                    "Nomor Telepon", // <--- CHANGED: Label for phone number
+                    "Nomor Telepon",
                     fontSize = 14.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 OutlinedTextField(
-                    value = phoneNumber, // <--- CHANGED: Use phoneNumber state
-                    onValueChange = { phoneNumber = it }, // <--- CHANGED: Update phoneNumber state
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     singleLine = true,
@@ -254,15 +242,12 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Simpan Button
             Button(
                 onClick = {
                     if (name.isBlank()) {
                         Toast.makeText(context, "Nama tidak boleh kosong", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-                    // Validation for phone number (optional, but good practice)
-                    // You might want more sophisticated phone number validation
                     if (phoneNumber.isBlank()) {
                         Toast.makeText(context, "Nomor Telepon tidak boleh kosong", Toast.LENGTH_SHORT).show()
                         return@Button
@@ -270,10 +255,10 @@ fun EditProfileScreen(
 
                     profileViewModel.updateProfile(
                         username = name,
-                        phoneNumber = phoneNumber, // <--- CHANGED: Pass phoneNumber
+                        phoneNumber = phoneNumber,
                         onSuccess = {
                             Toast.makeText(context, "Profil berhasil diperbarui!", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack() // Go back to profile screen
+                            navController.popBackStack()
                         },
                         onFailure = { errorMessage ->
                             Toast.makeText(context, "Gagal memperbarui profil: $errorMessage", Toast.LENGTH_LONG).show()

@@ -8,7 +8,6 @@ import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.brewspot.view.profile.User // Pastikan Anda mengimpor kelas User dari package yang benar
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -48,7 +47,6 @@ class ProfileViewModel : ViewModel() {
             val inputStream = context.contentResolver.openInputStream(image)
             val imageBitmap = BitmapFactory.decodeStream(inputStream)
             val outputStream = ByteArrayOutputStream()
-            // Kompres gambar (sesuaikan format dan kualitas jika perlu)
             imageBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
             val byteArray = outputStream.toByteArray()
             Base64.encodeToString(byteArray, Base64.DEFAULT)
@@ -78,8 +76,8 @@ class ProfileViewModel : ViewModel() {
                         _currentUser.value = User(
                             email = firebaseUser?.email ?: "",
                             username = firebaseUser?.displayName ?: firebaseUser?.email?.substringBefore('@') ?: "User",
-                            phoneNumber = "", // Default empty
-                            image = "" // Default empty
+                            phoneNumber = "",
+                            image = ""
                         )
                         Log.d("ProfileViewModel", "User document does not exist for UID: $userId. Created temporary User object.")
                     }
@@ -94,19 +92,10 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Updates the user's profile information in Firestore.
-     * Only updates username and phoneNumber as per your User data class.
-     * The email field from Auth is no longer updated here.
-     *
-     * @param username The new username.
-     * @param phoneNumber The new phone number (can be null or blank).
-     * @param onSuccess Callback for successful update.
-     * @param onFailure Callback for failed update with an error message.
-     */
+
     fun updateProfile(
         username: String,
-        phoneNumber: String, // <--- CHANGED: now takes phoneNumber, email not directly updated here
+        phoneNumber: String,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
@@ -118,26 +107,15 @@ class ProfileViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // We no longer update Firebase Auth email here, as the field in UI changed to phone number.
-                // If you still need email to be updated (e.g., if it's displayed but not editable),
-                // you would need to get it from currentUser?.email or pass it as a parameter if editable elsewhere.
-
-                // Prepare data for Firestore update
                 val updates = mutableMapOf<String, Any>(
                     "username" to username
-                    // 'email' will remain as is in Firestore unless specifically passed/updated
-                    // If you want to explicitly save email (even if not edited on this screen),
-                    // you'd add: "email" to (currentUser?.email ?: firebaseUser.email ?: "")
                 )
-                // Add phone number
-                updates["phoneNumber"] = phoneNumber // Save the new phone number
+                updates["phoneNumber"] = phoneNumber
 
-                // Update Firestore document
                 firestore.collection("users").document(firebaseUser.uid)
                     .update(updates)
                     .await()
 
-                // Refresh local _currentUser StateFlow after successful update
                 refreshUserProfile()
                 onSuccess()
                 Log.d("ProfileViewModel", "User profile updated successfully in Firestore.")
@@ -150,11 +128,10 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    // Fungsi updateProfile sekarang menerima `base64Image` bukan `imageUrl`
     fun updateProfile(
         username: String,
         phoneNumber: String,
-        base64Image: String? = null, // Ganti imageUrl menjadi base64Image
+        base64Image: String? = null,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
@@ -173,18 +150,17 @@ class ProfileViewModel : ViewModel() {
                     "phoneNumber" to phoneNumber
                 )
                 if (base64Image != null) {
-                    userUpdates["image"] = base64Image // Simpan Base64 di field imageUrl
+                    userUpdates["image"] = base64Image
                 }
 
                 firestore.collection("users").document(userId)
                     .update(userUpdates)
                     .await()
 
-                // Perbarui state _currentUser di ViewModel setelah update berhasil
                 _currentUser.value = _currentUser.value?.copy(
                     username = username,
                     phoneNumber = phoneNumber,
-                    image = base64Image ?: _currentUser.value?.image ?: "" // Perbarui imageUrl dengan Base64
+                    image = base64Image ?: _currentUser.value?.image ?: ""
                 )
                 onSuccess()
             } catch (e: Exception) {
@@ -207,8 +183,6 @@ class ProfileViewModel : ViewModel() {
             return
         }
 
-        // Re-authenticate user with their old password
-        // This is a crucial security step before allowing password changes
         val credential = EmailAuthProvider.getCredential(firebaseUser.email ?: "", oldPassword)
 
         viewModelScope.launch {
@@ -238,7 +212,6 @@ class ProfileViewModel : ViewModel() {
     }
     fun logout() {
         auth.signOut()
-        // The addAuthStateListener in init block will handle clearing _currentUser.value
         Log.d("ProfileViewModel", "User signed out from Firebase.")
     }
 }

@@ -43,9 +43,6 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-// Define CustomTopShape here or ensure it's imported from a common location.
-// For this example, I'll put it here assuming it's meant to be shared.
-// If it's exclusively in LoginScreen, you'd import it.
 class CustomTopShape : Shape {
     override fun createOutline(
         size: androidx.compose.ui.geometry.Size,
@@ -78,7 +75,6 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showMismatchDialog by remember { mutableStateOf(false) }
 
-    // Define colors consistently with LoginScreen
     val brownColor = Color(0xFF5D4037)
     val orangeColor = Color(0xFFB37300)
     val lightGrayBackground = Color(0xFFE0E0E0)
@@ -87,7 +83,6 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
     val context = LocalContext.current
     val activity = context as? Activity
 
-    // --- Google Sign-In related code (copied from LoginScreen) ---
     val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken("46336032851-psnppj5vbnt7oq5ri5c7qn0u7q4knoj9.apps.googleusercontent.com") // Ganti dengan ID dari Firebase Console
@@ -148,36 +143,35 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
                             }
                         }
                     } else {
-                        errorMessage = "Pendaftaran Google gagal." // Changed message for registration
+                        errorMessage = "Pendaftaran Google gagal."
                     }
                 }
         } catch (e: Exception) {
-            errorMessage = "Google Sign-Up error: ${e.localizedMessage}" // Changed message for registration
+            errorMessage = "Google Sign-Up error: ${e.localizedMessage}"
         }
     }
-    // --- End Google Sign-In related code ---
+
 
     LaunchedEffect(viewModel.registerState.collectAsState().value) {
         val state = viewModel.registerState.value
         when (state) {
             "success" -> {
-                navController.navigate("login") { // Navigate to login after successful traditional registration
+                navController.navigate("login") {
                     popUpTo("register") { inclusive = true }
                 }
             }
-            "loading" -> { /* Optionally show a loading indicator */ }
-            "idle" -> { /* Do nothing */ }
+            "loading" -> { }
+            "idle" -> {  }
             else -> {
-                errorMessage = state // Set error message from ViewModel for traditional registration errors
+                errorMessage = state
             }
         }
     }
 
-    // Pop-up for error or warning messages
     if (errorMessage != null) {
         AlertDialog(
             onDismissRequest = { errorMessage = null },
-            title = { Text("Peringatan") }, // Changed title to "Peringatan"
+            title = { Text("Peringatan") },
             text = { Text(errorMessage ?: "") },
             confirmButton = {
                 TextButton(onClick = { errorMessage = null }) {
@@ -186,12 +180,10 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
             }
         )
     }
-    // --- End Google Sign-In related code ---
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Top section
         Box(
             modifier = Modifier
                 .clip(CustomTopShape())
@@ -202,17 +194,17 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 0.dp) // Adjusted top padding for content
+                modifier = Modifier.padding(top = 0.dp)
             ) {
                 Text(
-                    "Registrasi", // Matches image
+                    "Registrasi",
                     color = Color.White,
-                    fontSize = 32.sp, // Matches image
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Isi form di bawah ini terlebih dahulu sebelum\nmemulai aplikasi", // Matches image
+                    "Isi form di bawah ini terlebih dahulu sebelum\nmemulai aplikasi",
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium
@@ -220,20 +212,17 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
             }
         }
 
-        // Bottom section (register form)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.7f)
                 .padding(horizontal = 24.dp)
-                .offset(y = (-40).dp), // Overlap with top section
+                .offset(y = (-40).dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp) // Spacing between fields
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Spacer to adjust vertical position relative to the curve
             Spacer(modifier = Modifier.height(0.dp))
 
-            // Username Field (first as per image)
             RoundedTextField(
                 value = username,
                 onValueChange = { username = it },
@@ -242,7 +231,6 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
                 leadingIcon = { Icon(painterResource(id = R.drawable.user), contentDescription = "Username Icon", modifier = Modifier.size(20.dp)) }
             )
 
-            // Email Field (second as per image)
             RoundedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -252,7 +240,6 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
                 leadingIcon = { Icon(painterResource(id = R.drawable.email), contentDescription = "Email Icon", modifier = Modifier.size(20.dp)) }
             )
 
-            // Password Field (third as per image)
             RoundedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -264,7 +251,6 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
                 leadingIcon = { Icon(painterResource(id = R.drawable.lock), contentDescription = "Password Icon", modifier = Modifier.size(20.dp)) }
             )
 
-            // Confirm Password Field (fourth as per image)
             RoundedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -276,7 +262,7 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
                 leadingIcon = { Icon(painterResource(id = R.drawable.lock), contentDescription = "Confirm Password Icon", modifier = Modifier.size(20.dp)) }
             )
 
-            Spacer(modifier = Modifier.height(1.dp)) // Increased spacing before button as per image
+            Spacer(modifier = Modifier.height(1.dp))
 
             val registerButtonInteractionSource = remember { MutableInteractionSource() }
             val isRegisterButtonPressed by registerButtonInteractionSource.collectIsPressedAsState()
@@ -284,7 +270,6 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
             val registerButtonBackgroundColor = if (isRegisterButtonPressed) brownColor else lightGrayBackground
             val registerButtonTextColor = if (isRegisterButtonPressed) Color.White else darkGrayText
 
-            // "Daftar" Button
             Button(
                 onClick = {
                     if (password == confirmPassword) {
@@ -305,7 +290,6 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
             }
 
 
-            // "Daftar dengan Google" Button
             OutlinedButton(
                 onClick = {
                     val signInIntent = googleSignInClient.signInIntent
@@ -317,7 +301,7 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, Color.LightGray),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.White, // White background as per image
+                    containerColor = Color.White,
                     contentColor = Color.Black
                 )
             ) {
@@ -332,31 +316,29 @@ fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Footer
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Sudah mempunyai akun? ", // Matches image
+                    "Sudah mempunyai akun? ",
                     color = Color.Gray,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    "Masuk", // Matches image
+                    "Masuk",
                     color = orangeColor,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.clickable {
                         navController.navigate("login")                    },
-                    textDecoration = TextDecoration.None // Explicitly no underline as per image
+                    textDecoration = TextDecoration.None
                 )
             }
         }
     }
 }
 
-// Re-using and slightly modifying the RoundedTextField for leadingIcon support
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoundedTextField(
@@ -368,7 +350,7 @@ fun RoundedTextField(
     passwordVisible: Boolean = false,
     onPasswordVisibilityToggle: (() -> Unit)? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
-    leadingIcon: @Composable (() -> Unit)? = null // Added leadingIcon parameter
+    leadingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -380,18 +362,18 @@ fun RoundedTextField(
         singleLine = true,
         visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        leadingIcon = leadingIcon, // Applied leading icon
+        leadingIcon = leadingIcon,
         trailingIcon = {
             if (isPassword) {
                 val image = if (passwordVisible)
-                    painterResource(id = R.drawable.show) // Make sure you have 'show.xml' drawable
+                    painterResource(id = R.drawable.show)
                 else
-                    painterResource(id = R.drawable.hide) // Make sure you have 'hide.xml' drawable
+                    painterResource(id = R.drawable.hide)
                 IconButton(onClick = { onPasswordVisibilityToggle?.invoke() }) {
                     Icon(
                         painter = image,
                         contentDescription = "Toggle password visibility",
-                        modifier = Modifier.size(20.dp) // Consistent size
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -407,8 +389,6 @@ fun RoundedTextField(
     )
 }
 
-// This SocialIconButton is no longer directly used for the Google button in RegisterScreen
-// as it's now an OutlinedButton, but keeping it if it's used elsewhere in your project.
 @Composable
 fun SocialIconButton(
     iconRes: Int,

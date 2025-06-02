@@ -55,7 +55,7 @@ fun ConfirmationPaymentScreen(
     reservationId: String,
     viewModel: ConfirmationViewModel,
     menuViewModel: MenuViewModel,
-    paymentMethodViewModel: PaymentMethodViewModel// NEW: Inject PaymentMethodViewModel
+    paymentMethodViewModel: PaymentMethodViewModel
 
 ) {
     val cafeDetails by viewModel.cafeDetails.collectAsState()
@@ -63,9 +63,9 @@ fun ConfirmationPaymentScreen(
     val orderedMenuItems by viewModel.orderedMenuItems.collectAsState()
     val totalPayment by viewModel.totalPayment.collectAsState()
     val currentMenuCartItems by menuViewModel.cartItems.collectAsState()
-    val calculatedDownPayment by viewModel.calculatedDownPayment.collectAsState() // NEW: Collect calculated down payment
-    val appliedVoucher by viewModel.appliedVoucher.collectAsState() // Tambahkan ini untuk mengamati voucher yang diterapkan
-    val selectedPaymentMethod by paymentMethodViewModel.selectedPaymentMethod.collectAsState() // NEW: Observe selected payment method
+    val calculatedDownPayment by viewModel.calculatedDownPayment.collectAsState()
+    val appliedVoucher by viewModel.appliedVoucher.collectAsState()
+    val selectedPaymentMethod by paymentMethodViewModel.selectedPaymentMethod.collectAsState()
     val showSuccessDialog = remember { mutableStateOf(false) }
     val brownColor = Color(0xFF5D4037)
     val lightGreyBackground = Color(0xFFF0F0F0)
@@ -78,14 +78,7 @@ fun ConfirmationPaymentScreen(
     }
     LaunchedEffect(viewModel) {
         viewModel.onFinalCheckoutSuccess = {
-            // REMOVE the Toast and direct navigation here
-            // Toast.makeText(context, "Pembayaran & booking meja berhasil!", Toast.LENGTH_LONG).show()
-            menuViewModel.clearCartForCafe(cafeId) // Clear cart here
-            // navController.navigate("welcome") { // REMOVE this navigation
-            //     popUpTo("login") { inclusive = false }
-            // }
-
-            // ONLY set the state to true to show the dialog
+            menuViewModel.clearCartForCafe(cafeId)
             showSuccessDialog.value = true
         }
         viewModel.onFinalCheckoutFailure = { errorMessage ->
@@ -133,7 +126,7 @@ fun ConfirmationPaymentScreen(
                     }
                     Button(
                         onClick = {
-                            if (isPaymentMethodSelected) { // Check if payment method is selected
+                            if (isPaymentMethodSelected) {
                                 viewModel.performCheckout(
                                     cafeId = cafeId,
                                     reservationId = reservationId,
@@ -144,10 +137,10 @@ fun ConfirmationPaymentScreen(
                                 Toast.makeText(context, "Pilih metode pembayaran terlebih dahulu", Toast.LENGTH_SHORT).show()
                             }
                         },
-                        enabled = isPaymentMethodSelected, // NEW: Control button enabled state
+                        enabled = isPaymentMethodSelected,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = brownColor,
-                            disabledContainerColor = Color.Gray // Optional: Visual feedback when disabled
+                            disabledContainerColor = Color.Gray
                         ),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.height(48.dp)
@@ -163,12 +156,11 @@ fun ConfirmationPaymentScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(lightGreyBackground)
-                .padding(horizontal = 16.dp), // Padding horizontal untuk keseluruhan konten dalam LazyColumn
-            verticalArrangement = Arrangement.spacedBy(16.dp) // Spasi antar item Card
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
 
         ) {
 
-            // Ringkasan Pemesanan Kafe
             item {
                 Spacer(modifier = Modifier.height(30.dp))
 
@@ -216,16 +208,14 @@ fun ConfirmationPaymentScreen(
                                     .clip(RoundedCornerShape(8.dp))
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            // Menggunakan Column dengan Modifier.weight(1f) dan TextOverflow
-                            // untuk detail yang bisa panjang
-                            Column(modifier = Modifier.weight(1f)) { // Kiri
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     cafeDetails?.name ?: "Nama Kafe",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
-                                    maxLines = 1, // Batasi 1 baris
-                                    overflow = TextOverflow.Ellipsis // Tambahkan elipsis jika panjang
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 reservationDetails?.let { details ->
@@ -236,8 +226,8 @@ fun ConfirmationPaymentScreen(
                                             details["userName"] as? String ?: "Nama Pemesan",
                                             fontSize = 14.sp,
                                             color = Color.Gray,
-                                            maxLines = 1, // Batasi 1 baris
-                                            overflow = TextOverflow.Ellipsis // Tambahkan elipsis
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -264,9 +254,9 @@ fun ConfirmationPaymentScreen(
                                     }
                                 }
                             }
-                            Spacer(modifier = Modifier.width(13.dp)) // Spasi antar dua kolom info
+                            Spacer(modifier = Modifier.width(13.dp))
 
-                            Column(modifier = Modifier.weight(1f)) { // Kanan
+                            Column(modifier = Modifier.weight(1f)) {
                                 reservationDetails?.let { details ->
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(painterResource(id = R.drawable.clock), contentDescription = "Time Icon", modifier = Modifier.size(16.dp), tint = Color.Gray)
@@ -285,8 +275,8 @@ fun ConfirmationPaymentScreen(
                                             "Meja: ${selectedTables.joinToString(", ")}",
                                             fontSize = 14.sp,
                                             color = Color.Gray,
-                                            maxLines = 1, // Batasi 1 baris
-                                            overflow = TextOverflow.Ellipsis // Tambahkan elipsis
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -343,14 +333,14 @@ fun ConfirmationPaymentScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column { // NEW: Tambahkan Column untuk teks metode pembayaran
+                        Column {
                             Text(
-                                "Metode Pembayaran", // Changed label to reflect current state
+                                "Metode Pembayaran",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold, // Changed to SemiBold for consistency
+                                fontWeight = FontWeight.SemiBold,
                                 color = Color.Black
                             )
-                            selectedPaymentMethod?.let { method -> // NEW: Tampilkan metode pembayaran yang dipilih
+                            selectedPaymentMethod?.let { method ->
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     val imageModel: Any? = remember(method.imageUrl) {
                                         val imageString = method.imageUrl
@@ -365,14 +355,14 @@ fun ConfirmationPaymentScreen(
 
                                     val painter = rememberAsyncImagePainter(
                                         model = imageModel,
-                                        placeholder = painterResource(id = R.drawable.coffee), // Placeholder default
-                                        error = painterResource(id = R.drawable.coffee) // Gambar error default
+                                        placeholder = painterResource(id = R.drawable.coffee),
+                                        error = painterResource(id = R.drawable.coffee)
                                     )
                                     Image(
                                         painter = painter,
                                         contentDescription = method.name,
                                         contentScale = ContentScale.Fit,
-                                        modifier = Modifier.size(32.dp) // Smaller size for display in summary
+                                        modifier = Modifier.size(32.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
@@ -383,7 +373,6 @@ fun ConfirmationPaymentScreen(
                                     )
                                 }
                             } ?: run {
-                                // If no payment method is selected
                                 Text(
                                     text = "Pilih Metode Pembayaran Anda",
                                     fontSize = 14.sp,
@@ -402,12 +391,12 @@ fun ConfirmationPaymentScreen(
                 }
             }
 
-            // Voucher Section - Tampilan baru seperti di gambar
+            // Voucher Section
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { navController.navigate("voucherScreen") }, // Tetap bisa diklik untuk mengubah
+                        .clickable { navController.navigate("voucherScreen") },
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -416,9 +405,7 @@ fun ConfirmationPaymentScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
-                        // Jika ada voucher yang diterapkan, tampilkan detailnya
                         appliedVoucher?.let { voucher ->
-                            // Baris untuk menampilkan voucher yang dipakai dan potongannya
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -427,37 +414,37 @@ fun ConfirmationPaymentScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = voucher.name, // Nama voucher
+                                    text = voucher.name,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.Black
                                 )
                                 Text(
-                                    text = "- ${formatRupiah(voucher.potongan)}", // Potongan harga
+                                    text = "- ${formatRupiah(voucher.potongan)}",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color.Black // Sesuaikan warna jika perlu
+                                    color = Color.Black
                                 )
                             }
                             // Tombol "Ganti Voucher"
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(56.dp) // Tinggi disesuaikan dengan gambar
+                                    .height(56.dp)
                                     .clip(
                                         RoundedCornerShape(
                                             bottomStart = 12.dp,
                                             bottomEnd = 12.dp
                                         )
-                                    ) // Hanya sudut bawah yang melengkung
-                                    .background(brownColor) // Warna coklat gelap
-                                    .clickable { navController.navigate("voucherScreen") }, // Kembali ke layar voucher
-                                contentAlignment = Alignment.CenterStart // Align teks ke kiri
+                                    )
+                                    .background(brownColor)
+                                    .clickable { navController.navigate("voucherScreen") },
+                                contentAlignment = Alignment.CenterStart
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 16.dp), // Padding horizontal untuk teks
+                                        .padding(horizontal = 16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -465,10 +452,10 @@ fun ConfirmationPaymentScreen(
                                         text = "Ganti Voucher",
                                         color = Color.White,
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold // Bold seperti di gambar
+                                        fontWeight = FontWeight.Bold
                                     )
                                     Icon(
-                                        painterResource(id = R.drawable.rightarrow), // Menggunakan rightarrow yang sudah ada
+                                        painterResource(id = R.drawable.rightarrow),
                                         contentDescription = "Ganti Voucher",
                                         tint = Color.White,
                                         modifier = Modifier.size(24.dp)
@@ -476,7 +463,6 @@ fun ConfirmationPaymentScreen(
                                 }
                             }
                         } ?: run {
-                            // Jika belum ada voucher yang diterapkan, tampilkan "Pilih Voucher Anda"
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -522,12 +508,8 @@ fun ConfirmationPaymentScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         val totalMenuOrderPrice = orderedMenuItems.sumOf { it.price * it.quantity }
-// Display Total Pemesanan Menu
                         PaymentSummaryRow("Total Pemesanan Menu", totalMenuOrderPrice)
-                        // Display Biaya Aplikasi
                         PaymentSummaryRow("Biaya Aplikasi", viewModel.appFeeAmount)
-
-                        // NEW: Display Voucher Discount if applied
                         viewModel.appliedVoucher.collectAsState().value?.let { voucher ->
                             if (totalMenuOrderPrice + viewModel.appFeeAmount >= voucher.minimal) {
                                 PaymentSummaryRow("Diskon Voucher", -voucher.potongan, isDiscount = true)
@@ -536,14 +518,12 @@ fun ConfirmationPaymentScreen(
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // Display Sistem Down Payment
                         PaymentSummaryRow("Sistem Down Payment (50%)", calculatedDownPayment)
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Divider(color = Color.LightGray, thickness = 1.dp)
                         Spacer(modifier =Modifier.height(8.dp))
 
-                        // Display Total Pembayaran Akhir
                         PaymentSummaryRow("Total Pembayaran", totalPayment, isTotal = true)
                     }
                 }
@@ -556,8 +536,7 @@ fun ConfirmationPaymentScreen(
     }
     if (showSuccessDialog.value) {
         PaymentSuccessDialog(navController = navController) {
-            // This lambda is called when the dialog's button is clicked
-            showSuccessDialog.value = false // Hide the dialog
+            showSuccessDialog.value = false
             navController.navigate("welcome") {
                 popUpTo("login") { inclusive = false }
             }
@@ -570,9 +549,8 @@ fun MenuItemConfirmationCard(item: MenuItem) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween // Ini penting untuk memisahkan kuantitas ke kanan
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Kolom untuk Gambar dan Detail Menu
         Row(
             modifier = Modifier.weight(1f), // Beri bobot agar mengisi ruang
             verticalAlignment = Alignment.CenterVertically
@@ -594,10 +572,8 @@ fun MenuItemConfirmationCard(item: MenuItem) {
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(
-                // Tambahkan modifier widthIn agar kolom ini tidak terlalu lebar dan mendesak kuantitas
-                // Sesuaikan nilai maxWidth dengan lebar yang Anda inginkan sebelum teks deskripsi memotong kuantitas
-                modifier = Modifier.weight(1f, fill = false) // fill = false agar tidak memenuhi sisa ruang secara paksa
-                    .widthIn(max = 180.dp) // Sesuaikan nilai ini, misal 150.dp atau 180.dp
+                modifier = Modifier.weight(1f, fill = false)
+                    .widthIn(max = 180.dp)
             ) {
                 Text(
                     text = item.name,
@@ -609,10 +585,10 @@ fun MenuItemConfirmationCard(item: MenuItem) {
                 )
 
                 Text(
-                    text = item.description, // Display description
+                    text = item.description,
                     color = Color.Gray,
                     fontSize = 12.sp,
-                    maxLines = 1, // Pastikan ini tetap 1
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
@@ -671,15 +647,11 @@ fun PaymentSuccessDialog(navController: NavController, onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Checkmark icon
-                // Make sure you have a drawable for the checkmark icon in your resources
-                // For example, an SVG or PNG in res/drawable named 'ic_success_checkmark'
-                // You can also use Icons.Filled.CheckCircle if you prefer Material Icons
                 Image(
-                    painter = painterResource(id = R.drawable.correct), // Replace with your actual checkmark drawable
+                    painter = painterResource(id = R.drawable.correct),
                     contentDescription = "Success",
                     modifier = Modifier.size(96.dp),
-                    colorFilter = null // Use null if your drawable already has color
+                    colorFilter = null
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
@@ -698,12 +670,12 @@ fun PaymentSuccessDialog(navController: NavController, onDismiss: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    onClick = onDismiss, // Calls the lambda to dismiss the dialog and navigate
+                    onClick = onDismiss,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D4037)) // Brown color
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D4037))
                 ) {
                     Text("Lanjutkan", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }

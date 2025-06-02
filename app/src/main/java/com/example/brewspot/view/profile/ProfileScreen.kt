@@ -39,14 +39,13 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel // Import for viewModel()
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.brewspot.R
-import com.example.brewspot.view.home.BottomNavigationBar // Assuming BottomNavigationBar is in home package
+import com.example.brewspot.view.home.BottomNavigationBar
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-// Custom shape for the top brown background, similar to HomeScreen but adapted for Profile
 class ProfileTopShape : Shape {
     override fun createOutline(
         size: androidx.compose.ui.geometry.Size,
@@ -56,23 +55,21 @@ class ProfileTopShape : Shape {
         val width = size.width
         val height = size.height
 
-        moveTo(0f, 0f) // Top-left
-        lineTo(width, 0f) // Top-right
-        lineTo(width, height * 0.7f) // Curve starts slightly higher on the right
+        moveTo(0f, 0f)
+        lineTo(width, 0f)
+        lineTo(width, height * 0.7f)
         quadraticBezierTo(
-            width / 2, height, // Control point at the bottom center, defining the curve
-            0f, height * 0.7f // Curve ends slightly higher on the left
+            width / 2, height,
+            0f, height * 0.7f
         )
         close()
     })
 }
 
-// Re-using the decodeBase64ToBitmap function if it's not globally accessible
 fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
     if (base64Str.isNullOrEmpty()) {
         return null
     }
-    // Hapus awalan "data:image/jpeg;base64," jika ada
     val cleanBase64Str = if (base64Str.startsWith("data:image", ignoreCase = true)) {
         base64Str.substringAfter(",")
     } else {
@@ -91,11 +88,11 @@ fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    profileViewModel: ProfileViewModel = viewModel() // Inject ViewModel
+    profileViewModel: ProfileViewModel = viewModel()
 ) {
-    val context = LocalContext.current // Dapatkan konteks di sini
+    val context = LocalContext.current
 
-    val googleSignInClient = remember { // Inisialisasi GoogleSignInClient
+    val googleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken("46336032851-psnppj5vbnt7oq5ri5c7qn0u7q4knoj9.apps.googleusercontent.com") // Gunakan ID proyek Anda yang sebenarnya
             .requestEmail()
@@ -106,11 +103,11 @@ fun ProfileScreen(
     LaunchedEffect(Unit) {
         profileViewModel.refreshUserProfile()
     }
-    val brownColor = Color(0xFF5D4037) // Dark brown color
-    val backgroundColor = Color(0xFFF0F0F0) // Light gray background
-    val lightGrayBackground = Color(0xFFE0E0E0) // Light gray for the "Masuk" button background
-    val darkGrayText = Color(0xFF424242) // Dark gray for text
-    val currentUser by profileViewModel.currentUser.collectAsState() // Observe user data
+    val brownColor = Color(0xFF5D4037)
+    val backgroundColor = Color(0xFFF0F0F0)
+    val lightGrayBackground = Color(0xFFE0E0E0)
+    val darkGrayText = Color(0xFF424242)
+    val currentUser by profileViewModel.currentUser.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -128,7 +125,7 @@ fun ProfileScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp) // Adjusted height for the profile header
+                    .height(280.dp)
                     .clip(ProfileTopShape())
                     .background(brownColor),
                 contentAlignment = Alignment.Center
@@ -140,37 +137,34 @@ fun ProfileScreen(
                 ) {
 
                     Text(
-                        text = currentUser?.username ?: "Guest", // Display username or "Guest" if null
+                        text = currentUser?.username ?: "Guest",
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = currentUser?.email ?: "guest@example.com", // Display email or default
+                        text = currentUser?.email ?: "guest@example.com",
                         color = Color.White.copy(alpha = 0.8f),
                         fontSize = 16.sp
                     )
-                    // Spacer di sini untuk memberi jarak antara teks dan gambar
-                    Spacer(modifier = Modifier.height(12.dp)) // Jarak antara teks dan gambar profil
+                    Spacer(modifier = Modifier.height(12.dp))
                     val imageModel: Any? = remember(currentUser?.image) {
                         val imageString = currentUser?.image
                         if (imageString.isNullOrEmpty()) {
                             null
                         } else if (imageString.startsWith("http://") || imageString.startsWith("https://")) {
-                            imageString // Ini adalah URL
+                            imageString
                         } else if (imageString.startsWith("data:image/")) {
-                            // Ini mungkin Base64, coba dekode
                             decodeBase64ToBitmap(imageString)
                         } else {
-                            // Format tidak dikenal, atau mungkin hanya Base64 tanpa awalan data:image
-                            decodeBase64ToBitmap(imageString) // Coba dekode sebagai Base64 murni
+                            decodeBase64ToBitmap(imageString)
                         }
                     }
 
                     val painter = rememberAsyncImagePainter(
-                        model = imageModel, // <-- Model sekarang bisa String URL atau Bitmap
-                        placeholder = painterResource(id = R.drawable.user), // Placeholder default
-                        error = painterResource(id = R.drawable.user) // Gambar error default
+                        model = imageModel,
+                        placeholder = painterResource(id = R.drawable.user),
+                        error = painterResource(id = R.drawable.user)
                     )
                     Image(
                         painter = painter,
@@ -181,14 +175,14 @@ fun ProfileScreen(
                             .clip(CircleShape)
                             .background(Color.White)
                     )
-                    Spacer(modifier = Modifier.height(20.dp)) // Spacer di bagian bawah, agar gambar tidak terlalu dekat ke kurva
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
             // Options Section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-40).dp) // Move options up to overlap with the curve
+                    .offset(y = (-40).dp)
                     .padding(horizontal = 24.dp)
             ) {
                 ProfileOptionCard(
@@ -207,7 +201,7 @@ fun ProfileScreen(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 ProfileOptionCard(
-                    icon = painterResource(id = R.drawable.question), // Using QuestionMark as a placeholder for help icon
+                    icon = painterResource(id = R.drawable.question),
                     text = "Bantuan dan Dukungan",
                     onClick = { navController.navigate("help_support") }
                 )
@@ -217,12 +211,12 @@ fun ProfileScreen(
                     text = "Tentang Aplikasi",
                     onClick = { navController.navigate("about_app") }
                 )
-                Spacer(modifier = Modifier.height(24.dp)) // Space before logout
+                Spacer(modifier = Modifier.height(24.dp))
 
                 ProfileOptionCard(
-                    icon = painterResource(id = R.drawable.logout), // Assuming you have a logout icon in your drawables
+                    icon = painterResource(id = R.drawable.logout),
                     text = "Logout",
-                    onClick = { showLogoutDialog = true } // Show dialog on click
+                    onClick = { showLogoutDialog = true }
                 )
 
             }
@@ -236,10 +230,8 @@ fun ProfileScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        // Lakukan Sign Out dari Firebase
                         profileViewModel.logout()
 
-                        // Lakukan Sign Out dari GoogleSignInClient
                         googleSignInClient.signOut().addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 println("GoogleSignInClient signed out successfully.")
@@ -248,9 +240,7 @@ fun ProfileScreen(
                             }
                         }
 
-                        // Navigasi ke layar login
                         navController.navigate("login") {
-                            // Hapus semua dari back stack hingga layar login
                             popUpTo("login") {
                                 inclusive = true
                             }
@@ -278,27 +268,27 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileOptionCard(
-    icon: Any, // Can accept ImageVector or Painter
+    icon: Any,
     text: String,
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    val containerColor = if (isPressed) Color(0xFF5D4037) else Color.White // Dark brown when pressed, white otherwise
-    val textColor = if (isPressed) Color.White else Color.Black // White text when pressed, black otherwise
+    val containerColor = if (isPressed) Color(0xFF5D4037) else Color.White
+    val textColor = if (isPressed) Color.White else Color.Black
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp) // Fixed height for option cards
+            .height(60.dp)
             .clickable(
-                interactionSource = interactionSource, // Pass the interactionSource
-                indication = null, // Disable ripple effect for custom press effect
+                interactionSource = interactionSource,
+                indication = null,
                 onClick = onClick
             ),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor), // Apply dynamic color
+        colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -313,21 +303,21 @@ fun ProfileOptionCard(
                     Icon(
                         imageVector = icon,
                         contentDescription = text,
-                        tint = textColor, // Apply dynamic color
+                        tint = textColor,
                         modifier = Modifier.size(24.dp)
                     )
                 } else if (icon is androidx.compose.ui.graphics.painter.Painter) {
                     Icon(
                         painter = icon,
                         contentDescription = text,
-                        tint = textColor, // Apply dynamic color
+                        tint = textColor,
                         modifier = Modifier.size(24.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = text,
-                    color = textColor, // Apply dynamic color
+                    color = textColor,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -335,7 +325,7 @@ fun ProfileOptionCard(
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = "Next",
-                tint = textColor, // Apply dynamic color
+                tint = textColor,
                 modifier = Modifier.size(24.dp)
             )
         }

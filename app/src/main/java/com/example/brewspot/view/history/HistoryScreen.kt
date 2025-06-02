@@ -24,11 +24,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.brewspot.R // Sesuaikan dengan R.drawable.cafeeee atau placeholder Anda
-import com.example.brewspot.view.home.BottomNavigationBar // Pastikan ini diimpor
-import com.example.brewspot.view.cafe_detail.loadImageModel // Pastikan ini diimpor
+import com.example.brewspot.R
+import com.example.brewspot.view.home.BottomNavigationBar
+import com.example.brewspot.view.cafe_detail.loadImageModel
 import java.text.NumberFormat
-import com.example.brewspot.utils.formatRupiah // <-- TAMBAHKAN INI
+import com.example.brewspot.utils.formatRupiah
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,7 +39,7 @@ fun HistoryScreen(
 ) {
     val bookingHistory by viewModel.bookingHistory.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val selectedBooking by viewModel.selectedBooking.collectAsState() // Ambil state selectedBooking
+    val selectedBooking by viewModel.selectedBooking.collectAsState()
 
     val brownColor = Color(0xFF5D4037)
     val lightGrayBackground = Color(0xFFF0F0F0)
@@ -152,7 +152,6 @@ fun HistoryScreen(
         }
     }
 
-    // Tampilkan dialog jika selectedBooking tidak null
     selectedBooking?.let { booking ->
         BookingDetailDialog(booking = booking) {
             viewModel.dismissBookingDetail()

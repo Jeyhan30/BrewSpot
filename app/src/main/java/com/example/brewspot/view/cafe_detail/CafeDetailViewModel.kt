@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/brewspot/view/cafe_detail/CafeDetailViewModel.kt
 package com.example.brewspot.view.cafe_detail
 
 import android.util.Log
@@ -66,8 +65,8 @@ class CafeDetailViewModel : ViewModel() {
                         _currentUser.value = User(
                             email = firebaseUser?.email ?: "",
                             username = firebaseUser?.displayName ?: firebaseUser?.email?.substringBefore('@') ?: "User",
-                            phoneNumber = "", // Default empty
-                            image = "" // Default empty
+                            phoneNumber = "",
+                            image = ""
                         )
                         Log.d("CafeDetailViewModel", "User document does not exist for UID: $userId. Created temporary User object.")
                     }
@@ -101,7 +100,7 @@ class CafeDetailViewModel : ViewModel() {
             "date" to date,
             "totalGuests" to totalGuests,
             "time" to time,
-            "timestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp() // Add server timestamp
+            "timestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp()
         )
 
         firestore.collection("reservations")

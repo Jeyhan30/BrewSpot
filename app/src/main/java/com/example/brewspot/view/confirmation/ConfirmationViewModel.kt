@@ -39,7 +39,6 @@ class ConfirmationViewModel : ViewModel() {
     // Down Payment Percentage
     private val downPaymentPercentage = 0.5 // 50%
 
-    // NEW: State for calculated down payment
     private val _calculatedDownPayment = MutableStateFlow(0.0)
     val calculatedDownPayment: StateFlow<Double> = _calculatedDownPayment
 
@@ -55,23 +54,23 @@ class ConfirmationViewModel : ViewModel() {
     }
     fun applyVoucher(voucher: Voucher?) {
         _appliedVoucher.value = voucher
-        recalculateTotals() // Panggil ini setiap kali voucher diterapkan atau dihapus
+        recalculateTotals()
     }
 
-    private fun recalculateTotals() { //
-        val totalMenuOrderPrice = orderedMenuItems.value.sumOf { it.price * it.quantity } //
-        var baseTotal = totalMenuOrderPrice + appFeeAmount //
+    private fun recalculateTotals() {
+        val totalMenuOrderPrice = orderedMenuItems.value.sumOf { it.price * it.quantity }
+        var baseTotal = totalMenuOrderPrice + appFeeAmount
 
-        _appliedVoucher.value?.let { voucher -> //
-            if (baseTotal >= voucher.minimal) { //
-                baseTotal -= voucher.potongan //
-                if (baseTotal < 0) baseTotal = 0.0 // Pastikan total tidak negatif
+        _appliedVoucher.value?.let { voucher ->
+            if (baseTotal >= voucher.minimal) {
+                baseTotal -= voucher.potongan
+                if (baseTotal < 0) baseTotal = 0.0
             }
         }
 
-        val dpAmount = baseTotal * downPaymentPercentage //
-        _calculatedDownPayment.value = dpAmount //
-        _totalPayment.value = baseTotal - dpAmount //
+        val dpAmount = baseTotal * downPaymentPercentage
+        _calculatedDownPayment.value = dpAmount
+        _totalPayment.value = baseTotal - dpAmount
     }
     fun fetchConfirmationDetails(cafeId: String, reservationId: String, menuViewModel: MenuViewModel) {
         viewModelScope.launch {
@@ -109,7 +108,7 @@ class ConfirmationViewModel : ViewModel() {
                 _appliedVoucher.value?.let { voucher ->
                     if (baseTotal >= voucher.minimal) {
                         baseTotal -= voucher.potongan
-                        if (baseTotal < 0) baseTotal = 0.0 // Pastikan total tidak negatif
+                        if (baseTotal < 0) baseTotal = 0.0
                     }
                 }
 
@@ -132,11 +131,9 @@ class ConfirmationViewModel : ViewModel() {
                 return@launch
             }
 
-            // Re-calculate totals to ensure consistency
             val totalMenuOrderPrice = orderedItems.sumOf { it.price * it.quantity }
             var baseTotal = totalMenuOrderPrice + appFeeAmount
 
-            // Apply voucher discount to baseTotal before calculating down payment
             _appliedVoucher.value?.let { voucher ->
                 if (baseTotal >= voucher.minimal) {
                     baseTotal -= voucher.potongan
@@ -163,14 +160,12 @@ class ConfirmationViewModel : ViewModel() {
                 val phoneNumber = userDoc.getString("phoneNumber") ?: "N/A"
                 val cafeName = _cafeDetails.value?.name ?: "Unknown Cafe"
 
-                // --- NEW: Fetch reservation details here ---
                 val reservationDoc = db.collection("reservations").document(reservationId).get().await()
                 val reservationDetails = if (reservationDoc.exists()) {
-                    reservationDoc.data // Get all data from the reservation document
+                    reservationDoc.data
                 } else {
                     null
                 }
-                // --- END NEW ---
 
                 val orderItemsData = orderedItems.map { item ->
                     hashMapOf(
@@ -209,16 +204,13 @@ class ConfirmationViewModel : ViewModel() {
                     orderHistory["paymentMethodImageUrl"] = ""
                 }
 
-                // --- NEW: Add reservation details to orderHistory ---
                 if (reservationDetails != null) {
                     orderHistory["reservationCafeName"] = reservationDetails["cafeName"] ?: "Unknown"
                     orderHistory["date"] = reservationDetails["date"] ?: "N/A"
                     orderHistory["reservationTime"] = reservationDetails["time"] ?: "N/A"
                     orderHistory["reservationTotalGuests"] = reservationDetails["totalGuests"] ?: 0
                     orderHistory["reservationSelectedTables"] = reservationDetails["selectedTables"] ?: emptyList<String>()
-                    // Anda bisa menambahkan detail lain dari reservasi jika diperlukan
                 }
-                // --- END NEW ---
 
                 db.collection("history")
                     .add(orderHistory)
@@ -227,9 +219,7 @@ class ConfirmationViewModel : ViewModel() {
 
                         viewModelScope.launch {
                             try {
-                                // The reservationDoc is already fetched above, no need to fetch again
-                                // val reservationDoc = db.collection("reservations").document(reservationId).get().await()
-                                if (reservationDoc.exists()) { // Use the already fetched reservationDoc
+                                if (reservationDoc.exists()) {
                                     val selectedTables = reservationDoc.get("selectedTables") as? List<String>
                                     selectedTables?.forEach { tableId ->
                                         db.collection("Cafe").document(cafeId)

@@ -22,9 +22,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState // Import ini
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll // Import ini
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -70,7 +70,6 @@ import java.util.Calendar
 import java.util.Locale
 import java.net.URLEncoder
 
-// Color Constants
 private val BrownColor = Color(0xFF5D4037)
 private val LightGrayBackground = Color(0xFFEEEEEE)
 private val WhiteBackground = Color.White
@@ -134,7 +133,6 @@ fun CafeDetailScreen(
 
     val context = LocalContext.current
 
-    // Fetch cafe details and current user when cafeId or currentUser changes
     LaunchedEffect(cafeId) {
         if (cafeId != null) {
             viewModel.fetchCafeDetails(cafeId)
@@ -148,7 +146,6 @@ fun CafeDetailScreen(
         }
     }
 
-    // Set status bar color to transparent (if using Accompanist)
     val systemUiController = rememberSystemUiController()
     SideEffect {
         systemUiController.setStatusBarColor(
@@ -179,20 +176,18 @@ fun CafeDetailScreen(
         },
         Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
         Calendar.getInstance().get(Calendar.MINUTE),
-        true // is 24 hour view
+        true
     )
 
     // Using Scaffold for basic structure and system inset handling
     Scaffold(
         containerColor = Color.Transparent
     ) { paddingValues ->
-        // MODIFIED: Tambahkan verticalScroll ke Column utama
         Column(
             modifier = Modifier
-                // Hapus .fillMaxSize() karena scrolling akan menentukan tinggi
                 .background(LightGrayBackground)
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState()) // Penambahan utama untuk scrolling
+                .verticalScroll(rememberScrollState())
         ) {
             // Main Image Section (Top Image Section)
             Box(
@@ -231,7 +226,7 @@ fun CafeDetailScreen(
                         titleContentColor = Color.White
                     )
                 )
-            } // End of Box for Top Image Section
+            }
 
             // Cafe Logo and Cafe Info Section (separated, overlapping with the image above)
             Row(
@@ -312,7 +307,6 @@ fun CafeDetailScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            // You can activate the line below if priceRange exists
                             Text("Rp ${currentCafe.priceRange}", fontSize = 14.sp, color = BrownColor)
                         }
                     } ?: run {
@@ -324,17 +318,15 @@ fun CafeDetailScreen(
                         )
                     }
                 }
-            } // End of Row for Logo and Cafe Info
+            }
 
             // Reservation Section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(WhiteBackground)
-                    // Hapus .weight(1f) di sini, karena parent Column sudah scrollable
                     .offset(y = (-30).dp)
             ) {
-                // Reservation Card with white background and curved corners
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -357,8 +349,8 @@ fun CafeDetailScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
                         value = userName,
-                        onValueChange = { /* Make this field read-only */ }, // MODIFIED: Remove onValueChange
-                        readOnly = true, // MODIFIED: Explicitly set as read-only
+                        onValueChange = { /* Make this field read-only */ },
+                        readOnly = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -483,13 +475,12 @@ fun CafeDetailScreen(
                                 ).show()
                             } else {
                                 cafe?.let { currentCafe ->
-                                    // URL-encode semua parameter kueri
                                     val encodedUserName = URLEncoder.encode(userName, "UTF-8")
                                     val encodedDate = URLEncoder.encode(selectedDate, "UTF-8")
                                     val encodedTime = URLEncoder.encode(selectedTime, "UTF-8")
 
                                     navController.navigate(
-                                        "tableLayout/${currentCafe.id}?" + // cafeId sebagai path parameter
+                                        "tableLayout/${currentCafe.id}?" +
                                                 "userName=$encodedUserName&" +
                                                 "date=$encodedDate&" +
                                                 "time=$encodedTime&" +

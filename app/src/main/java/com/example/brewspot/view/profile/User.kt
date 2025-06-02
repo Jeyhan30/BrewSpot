@@ -17,7 +17,7 @@ data class User(
                 username = doc.getString("username") ?: "",
                 email = doc.getString("email") ?: "",
                 phoneNumber = doc.getString("phoneNumber") ?: "",
-                image = doc.getString("image") ?: "" // Retrieve imageUrl from Firestore
+                image = doc.getString("image") ?: ""
             )
         }
     }

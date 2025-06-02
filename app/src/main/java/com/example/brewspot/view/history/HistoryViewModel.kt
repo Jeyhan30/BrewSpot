@@ -3,7 +3,7 @@ package com.example.brewspot.view.history
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.brewspot.view.home.Cafe // Pastikan ini diimpor dengan benar
+import com.example.brewspot.view.home.Cafe
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
@@ -26,7 +26,6 @@ class HistoryViewModel : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
-    // State untuk booking yang sedang dilihat detailnya
     private val _selectedBooking = MutableStateFlow<BookingHistory?>(null)
     val selectedBooking: StateFlow<BookingHistory?> = _selectedBooking
 
@@ -44,7 +43,7 @@ class HistoryViewModel : ViewModel() {
                 Log.d("HistoryViewModel", "Auth state changed: No user logged in. Clearing history...")
                 _internalBookingList.clear()
                 _bookingHistory.value = emptyList()
-                _selectedBooking.value = null // Clear selected booking if user logs out
+                _selectedBooking.value = null
             }
         }
         auth.addAuthStateListener(authStateListener)

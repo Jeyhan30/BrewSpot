@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/brewspot/view/menu/MenuScreen.kt
 package com.example.brewspot.view.menu
 
 import android.graphics.Bitmap
@@ -73,7 +72,7 @@ fun MenuScreen(
     }
     LaunchedEffect(reservationId) {
         if (reservationId != null) {
-            menuViewModel.setReservationId(reservationId) // NEW: Set reservationId in ViewModel
+            menuViewModel.setReservationId(reservationId)
         }
     }
 
@@ -88,7 +87,6 @@ fun MenuScreen(
             ) {
                 Button(
                     onClick = {
-                        // MODIFIED: Navigate to cart_screen with cafeId
                         navController.navigate("cart_screen?cafeId=${cafeId}")
                     },
                     modifier = Modifier
@@ -97,10 +95,8 @@ fun MenuScreen(
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = brownColor),
-                    // Enable button only if there are items from the current cafe in the cart
                     enabled = cartItems.any { it.cafeId == cafeId }
                 ) {
-                    // Display total price for items from the current cafe
                     val currentCafeTotalPrice = cartItems.filter { it.cafeId == cafeId }.sumOf { it.price * it.quantity }
                     Text(
                         "Selanjutnya (${formatRupiah(currentCafeTotalPrice)})",
@@ -181,7 +177,6 @@ fun MenuScreen(
                         )
                         Box(contentAlignment = Alignment.Center) {
                             IconButton(onClick = {
-                                // MODIFIED: Pass cafeId when navigating to cart_screen
                                 navController.navigate("cart_screen?cafeId=${cafeId}")
                             }) {
                                 Icon(
@@ -191,7 +186,6 @@ fun MenuScreen(
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
-                            // Only show count of items from the current cafe
                             val itemsInCurrentCafeCart = cartItems.count { it.cafeId == cafeId }
                             if (itemsInCurrentCafeCart > 0) {
                                 Text(

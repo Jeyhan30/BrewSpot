@@ -3,10 +3,10 @@ package com.example.brewspot.view.voucher
 import com.google.firebase.firestore.DocumentSnapshot
 
 data class Voucher(
-    val id: String = "", // ID Dokumen Firestore
+    val id: String = "",
     val name: String = "",
-    val potongan: Double = 0.0, // Potongan dalam bentuk nominal (misal: 10000 untuk 10rb)
-    val minimal: Double = 0.0 // Minimal pembelian
+    val potongan: Double = 0.0,
+    val minimal: Double = 0.0
 ) {
     companion object {
         fun fromFirestore(doc: DocumentSnapshot): Voucher {

@@ -24,10 +24,10 @@ data class Cafe(
                 name = doc.getString("Name") ?: "",
                 address = doc.getString("Address") ?: "",
                 jamOperasional = doc.getString("jam_operasional") ?: "",
-                image = doc.getString("image") ?: "", // Ambil dari field 'image'
+                image = doc.getString("image") ?: "",
                 imageDetail = doc.getString("imagedetail") ?: "",
                 denahImage = doc.getString("denah") ?: "",
-                priceRange = doc.getString("priceRange") ?: ""// Ambil dari field 'image_detail'
+                priceRange = doc.getString("priceRange") ?: ""
             )
         }
     }

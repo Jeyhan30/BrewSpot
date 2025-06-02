@@ -86,8 +86,8 @@ fun HomeScreen(
 ) {
     val recommendedCafes by viewModel.recommendedCafes.collectAsState()
     val popularCafes by viewModel.popularCafes.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState() // Observe the search query
-    val searchResults by viewModel.searchResults.collectAsState() // Observe search results
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
 
     val brownColor = Color(0xFF5D4037)
 
@@ -103,7 +103,6 @@ fun HomeScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF0F0F0))
         ) {
-            // Top Section - Brown Background
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -160,10 +159,9 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Updated OutlinedTextField for search functionality
                     OutlinedTextField(
-                        value = searchQuery, // Bind to the searchQuery state
-                        onValueChange = { viewModel.updateSearchQuery(it) }, // Update ViewModel on change
+                        value = searchQuery,
+                        onValueChange = { viewModel.updateSearchQuery(it) },
                         placeholder = { Text("Cari", color = Color.Gray) },
                         leadingIcon = {
                             Icon(
@@ -194,7 +192,6 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Display search results if query is not empty, otherwise display recommended cafes
             if (searchQuery.isNotBlank()) {
                 Column(modifier = Modifier.padding(bottom = 20.dp)) {
                     Text(

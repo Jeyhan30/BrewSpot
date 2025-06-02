@@ -40,9 +40,9 @@ fun ChangePasswordScreen(
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmNewPasswordVisible by remember { mutableStateOf(false) }
 
-    val brownColor = Color(0xFF5D4037) // Dark brown color
-    val lightGrayBorder = Color(0xFFE0E0E0) // Light gray for text field borders
-    val lightBrownBackground = Color(0xFFF0F0F0) // Light gray for overall background
+    val brownColor = Color(0xFF5D4037)
+    val lightGrayBorder = Color(0xFFE0E0E0)
+    val lightBrownBackground = Color(0xFFF0F0F0)
 
     Scaffold(
         topBar = {
@@ -77,7 +77,7 @@ fun ChangePasswordScreen(
                 .padding(paddingValues)
                 .background(lightBrownBackground),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top // Align content to top
+            verticalArrangement = Arrangement.Top
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -129,7 +129,6 @@ fun ChangePasswordScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Kata Sandi Baru
                 Text(
                     "Kata Sandi Baru",
                     fontSize = 14.sp,
@@ -171,7 +170,6 @@ fun ChangePasswordScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Konfirmasi Kata Sandi
                 Text(
                     "Konfirmasi Kata Sandi",
                     fontSize = 14.sp,
@@ -222,7 +220,7 @@ fun ChangePasswordScreen(
                         Toast.makeText(context, "Semua kolom kata sandi harus diisi.", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-                    if (newPassword.length < 6) { // Firebase requires minimum 6 characters
+                    if (newPassword.length < 6) {
                         Toast.makeText(context, "Kata Sandi Baru minimal 6 karakter.", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
@@ -236,7 +234,7 @@ fun ChangePasswordScreen(
                         newPassword = newPassword,
                         onSuccess = {
                             Toast.makeText(context, "Kata Sandi berhasil diganti!", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack() // Go back to profile screen
+                            navController.popBackStack()
                         },
                         onFailure = { errorMessage ->
                             Toast.makeText(context, "Gagal mengganti kata sandi: $errorMessage", Toast.LENGTH_LONG).show()

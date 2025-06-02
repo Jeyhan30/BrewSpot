@@ -30,9 +30,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.brewspot.R
-import com.example.brewspot.view.cafe_detail.decodeBase64ToBitmap // Pastikan ini diimpor atau salin fungsinya
+import com.example.brewspot.view.cafe_detail.decodeBase64ToBitmap
 
-// If decodeBase64ToBitmap is not already in this file or cafe_detail, copy it from there:
 fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
     if (base64Str.isNullOrEmpty()) {
         return null
@@ -115,9 +114,9 @@ fun PaymentMethodScreen(
                 .padding(paddingValues)
                 .background(lightGreyBackground)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp) // Spacing between individual cards
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(paymentMethods) { method -> // Iterate directly over all fetched methods
+            items(paymentMethods) { method ->
                 PaymentMethodCard(
                     method = method,
                     isSelected = method == selectedPaymentMethod,
@@ -162,15 +161,14 @@ fun PaymentMethodCard(
                     } else if (imageString.startsWith("http://") || imageString.startsWith("https://")) {
                         imageString
                     } else {
-                        // Assume it's Base64 if not a URL
                         decodeBase64ToBitmap(imageString)
                     }
                 }
 
                 val painter = rememberAsyncImagePainter(
                     model = imageModel,
-                    placeholder = painterResource(id = R.drawable.coffee), // Placeholder default
-                    error = painterResource(id = R.drawable.coffee) // Gambar error default
+                    placeholder = painterResource(id = R.drawable.coffee),
+                    error = painterResource(id = R.drawable.coffee)
                 )
 
                 Image(
@@ -191,7 +189,7 @@ fun PaymentMethodCard(
             }
             if (isSelected) {
                 Icon(
-                    painter = painterResource(id = R.drawable.check), // Ensure you have a 'check' drawable
+                    painter = painterResource(id = R.drawable.check),
                     contentDescription = "Selected",
                     tint = Color.Green,
                     modifier = Modifier.size(24.dp)

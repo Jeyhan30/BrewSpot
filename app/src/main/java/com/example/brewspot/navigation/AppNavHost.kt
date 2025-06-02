@@ -44,27 +44,25 @@ import com.example.brewspot.view.payment.PaymentMethodScreen
 import com.example.brewspot.view.payment.PaymentMethodViewModel
 import com.example.brewspot.view.profile.TentangScreen
 import com.example.brewspot.view.voucher.VoucherScreen
-import java.net.URLDecoder // Import untuk URLDecoder
+import java.net.URLDecoder
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    // Inisialisasi dependensi dan ViewModel
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
     val repository = AuthRepository(auth, firestore)
     val loginViewModelFactory = LoginViewModelFactory(repository)
-    val historyViewModel: HistoryViewModel = viewModel() // Initialize HistoryViewModel here
-    // Inisialisasi ViewModel menggunakan factory atau default
+    val historyViewModel: HistoryViewModel = viewModel()
     val loginViewModel: LoginViewModel = viewModel(factory = loginViewModelFactory)
     val cafeDetailViewModel: CafeDetailViewModel = viewModel()
-    val tableViewModel: TableViewModel = viewModel() // ViewModel untuk TableLayoutScreen
+    val tableViewModel: TableViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
-    val homeViewModel: HomeViewModel = viewModel() // <-- Correctly initialize HomeViewModel here
-    val menuViewModel: MenuViewModel = viewModel() // Initialize MenuViewModel here
-    val confirmationViewModel: ConfirmationViewModel = viewModel() // ADD THIS LINE
-    val paymentMethodViewModel: PaymentMethodViewModel = viewModel() //
+    val homeViewModel: HomeViewModel = viewModel()
+    val menuViewModel: MenuViewModel = viewModel()
+    val confirmationViewModel: ConfirmationViewModel = viewModel()
+    val paymentMethodViewModel: PaymentMethodViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "login") {
         composable("register") {
@@ -75,18 +73,15 @@ fun AppNavigation() {
         }
 
         composable("profile") {
-            // Pass the profileViewModel here
             ProfileScreen(navController = navController, profileViewModel = profileViewModel)
         }
         composable("editprofil") {
-            // Pass the profileViewModel here
             EditProfileScreen(navController = navController, profileViewModel = profileViewModel)
         }
         composable("editsandi") {
-            // Pass the profileViewModel here
             ChangePasswordScreen(navController = navController, profileViewModel = profileViewModel)
         }
-        composable("help_support") { // <--- ADD THIS NEW ROUTE
+        composable("help_support") {
             HelpSupportScreen(navController = navController)
         }
         composable("welcome/{username}", arguments = listOf(navArgument("username") {
@@ -99,7 +94,6 @@ fun AppNavigation() {
             HomeScreen(viewModel = homeViewModel, navController = navController)
 
         }
-        // Rute untuk CafeDetailScreen dengan parameter cafeId
         composable(
             "cafeDetail/{cafeId}",
             arguments = listOf(navArgument("cafeId") { type = NavType.StringType })
@@ -113,19 +107,18 @@ fun AppNavigation() {
         }
         composable("menu/{cafeId}?reservationId={reservationId}", arguments = listOf(
             navArgument("cafeId") { type = NavType.StringType },
-            navArgument("reservationId") { type = NavType.StringType; nullable = true } //
+            navArgument("reservationId") { type = NavType.StringType; nullable = true }
         )) { backStackEntry ->
             val cafeId = backStackEntry.arguments?.getString("cafeId") ?: "default"
-            val reservationId = backStackEntry.arguments?.getString("reservationId") //
+            val reservationId = backStackEntry.arguments?.getString("reservationId")
             MenuScreen(
                 navController = navController,
                 cafeId = cafeId,
-                reservationId = reservationId, // Pass reservationId to MenuScreen
+                reservationId = reservationId,
                 menuViewModel = menuViewModel
             )
         }
 
-        // MODIFIED: cart_screen now accepts a nullable cafeId argument
         composable(
             route = "cart_screen?cafeId={cafeId}",
             arguments = listOf(navArgument("cafeId") {
@@ -141,9 +134,8 @@ fun AppNavigation() {
             )
         }
 
-        // NEW: Route for Confirmation Payment Screen
         composable(
-            "confirmation_payment?cafeId={cafeId}&reservationId={reservationId}", // REMOVED historyId
+            "confirmation_payment?cafeId={cafeId}&reservationId={reservationId}",
             arguments = listOf(
                 navArgument("cafeId") { type = NavType.StringType },
                 navArgument("reservationId") { type = NavType.StringType }
@@ -158,7 +150,7 @@ fun AppNavigation() {
                     reservationId = reservationId,
                     viewModel = confirmationViewModel,
                     menuViewModel = menuViewModel,
-                    paymentMethodViewModel = paymentMethodViewModel// Pass MenuViewModel explicitly if not done via Hilt
+                    paymentMethodViewModel = paymentMethodViewModel
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -166,27 +158,24 @@ fun AppNavigation() {
                 }
             }
         }
-        composable("voucherScreen") { //
-            VoucherScreen(navController = navController, confirmationViewModel = confirmationViewModel) //
+        composable("voucherScreen") {
+            VoucherScreen(navController = navController, confirmationViewModel = confirmationViewModel)
         }
 
-        composable("paymentMethodScreen") { //
+        composable("paymentMethodScreen") {
             PaymentMethodScreen(
                 navController = navController,
                 paymentMethodViewModel = paymentMethodViewModel
             )
         }
-    // Rute untuk TableLayoutScreen dengan cafeId sebagai path parameter
-    // dan parameter reservasi lainnya sebagai query parameters
     composable(
-        "tableLayout/{cafeId}?" + // cafeId sebagai path parameter
+        "tableLayout/{cafeId}?" +
                 "userName={userName}&" +
                 "date={date}&" +
                 "time={time}&" +
                 "totalGuests={totalGuests}",
         arguments = listOf(
             navArgument("cafeId") { type = NavType.StringType },
-            // Query parameters bisa diset sebagai nullable (true) atau dengan defaultValue
             navArgument("userName") { type = NavType.StringType; nullable = true },
             navArgument("date") { type = NavType.StringType; nullable = true },
             navArgument("time") { type = NavType.StringType; nullable = true },
@@ -194,8 +183,6 @@ fun AppNavigation() {
         )
     ) { backStackEntry ->
         val cafeId = backStackEntry.arguments?.getString("cafeId")
-        // Parameter kueri secara otomatis didekode oleh NavController.
-        // Anda tidak perlu URLDecoder.decode() lagi di sini.
         val userName = backStackEntry.arguments?.getString("userName")
         val date = backStackEntry.arguments?.getString("date")
         val time = backStackEntry.arguments?.getString("time")
@@ -208,7 +195,7 @@ fun AppNavigation() {
             date = date,
             time = time,
             totalGuests = totalGuests,
-            viewModel = tableViewModel // Menggunakan TableViewModel yang sudah diinisialisasi
+            viewModel = tableViewModel
         )
     }
 
@@ -218,7 +205,6 @@ fun AppNavigation() {
     composable("editprofil") {
         EditProfileScreen(navController = navController, profileViewModel = profileViewModel)
     }
-    // Rute untuk layar riwayat (jika ada)
     composable("history") {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -230,7 +216,6 @@ fun AppNavigation() {
             )
         }
     }
-    // Rute untuk layar konfirmasi reservasi (setelah booking)
     composable("confirmation_screen") {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -242,13 +227,12 @@ fun AppNavigation() {
             )
         }
     }
-        composable("history") { // <--- ADD THIS NEW ROUTE
+        composable("history") {
             HistoryScreen(navController = navController, viewModel = historyViewModel)
         }
 
         composable("about_app") {
             TentangScreen(navController = navController)
         }
-    // Anda bisa menambahkan rute lain di sini
-}
+    }
 }

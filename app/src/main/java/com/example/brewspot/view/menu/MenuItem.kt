@@ -1,16 +1,16 @@
 package com.example.brewspot.view.menu
 
-import com.google.firebase.firestore.DocumentId // If you want to use a Firestore ID for the item itself (optional if in array)
+import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.DocumentSnapshot
 
 data class MenuItem(
     val id: String = "",
     val name: String = "",
     val description: String = "",
-    val price: Double, // Using Long for price to avoid decimal issues with integers
+    val price: Double,
     val imageUrl: String = "",
     var quantity: Int = 0,
-    val cafeId: String = "" // Tambahkan properti ini
+    val cafeId: String = ""
 ) {
     companion object {
         fun fromFirestore(doc: DocumentSnapshot): MenuItem {
