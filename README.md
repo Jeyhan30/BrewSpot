@@ -3,4 +3,6 @@ BrewSpot is an innovative café reservation application designed to streamline t
 
 # UI apk
 ## UserView
-<img src="app/src/main/assets/home.png" alt="Screenshot 1" width="300"> <img src="app/src/main/assets/DaftarMenu.png" alt="Screenshot 1" width="300"> <img src="app/src/main/assets/DaftarRiwayat.png" alt="Screenshot 1" width="300"> <img src="app/src/main/assets/PemilihanMeja.png" alt="Screenshot 1" width="300">
+<img src="app/src/main/assets/Beranda.png" alt="Screenshot 1" width="300"> <img src="app/src/main/assets/Reservasi.png" alt="Screenshot 1" width="300"> <img src="app/src/main/assets/DaftarMenu.png" alt="Screenshot 1" width="300"> <img src="app/src/main/assets/TambahProduk.png" alt="Screenshot 1" width="300">
+
+<img src="app/src/main/assets/RiwayatDaftarBeli.png" alt="Screenshot 1" width="300"> <img src="app/src/main/assets/RiwayatPembelianAktif.png" alt="Screenshot 1" width="300"> <img src="app/src/main/assets/Pembayaran.png" alt="Screenshot 1" width="300">
