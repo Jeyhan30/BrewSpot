@@ -3,6 +3,6 @@ BrewSpot is an innovative café reservation application designed to streamline t
 
 # UI apk
 ## UserView
-<img src="app/src/main/asset/Beranda.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/Reservasi.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/DaftarMenu.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/TambahProduk.png" alt="Screenshot 1" width="300">
-
-<img src="app/src/main/asset/RiwayatDaftarBeli.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/RiwayatPembelianAktif.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/Pembayaran.png" alt="Screenshot 1" width="300">
+<img src="app/src/main/asset/Beranda.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/Reservasi.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/DaftarMenu.png" alt="Screenshot 1" width="300">
+<img src="app/src/main/asset/TambahProduk.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/RiwayatPembelianAktif.png" alt="Screenshot 1" width="300">
+<img src="app/src/main/asset/RiwayatDaftarBeli.png" alt="Screenshot 1" width="300"> <img src="app/src/main/asset/Pembayaran.png" alt="Screenshot 1" width="300">
